@@ -351,7 +351,7 @@ describe('vibe-store', () => {
     expect(state.errorMessage).toBeNull();
   });
 
-  it('should not reset savedPlaceIds on reset', () => {
+  it('should clear savedPlaceIds on reset', () => {
     act(() => {
       useVibeStore.setState({ savedPlaceIds: ['p1', 'p2'] });
     });
@@ -360,7 +360,6 @@ describe('vibe-store', () => {
       useVibeStore.getState().reset();
     });
 
-    // savedPlaceIds are persisted in localStorage, not cleared by reset
-    expect(useVibeStore.getState().savedPlaceIds).toEqual(['p1', 'p2']);
+    expect(useVibeStore.getState().savedPlaceIds).toEqual([]);
   });
 });

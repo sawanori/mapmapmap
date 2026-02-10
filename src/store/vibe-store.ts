@@ -142,6 +142,10 @@ export const useVibeStore = create<VibeState>((set, get) => ({
       displayCount: 3,
       isLoading: false,
       errorMessage: null,
+      savedPlaceIds: [],
     });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('saved_place_ids');
+    }
   },
 }));
