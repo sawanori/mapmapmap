@@ -9,12 +9,16 @@ const VALID_RESPONSE = JSON.stringify({
   is_rejected: false,
 });
 
-let mockGenerateContent = vi.fn().mockResolvedValue({ text: VALID_RESPONSE });
+let mockCreate = vi.fn().mockResolvedValue({
+  choices: [{ message: { content: VALID_RESPONSE } }],
+});
 
-vi.mock('@google/genai', () => ({
-  GoogleGenAI: class {
-    models = {
-      generateContent: (...args: unknown[]) => mockGenerateContent(...args),
+vi.mock('openai', () => ({
+  default: class {
+    chat = {
+      completions: {
+        create: (...args: unknown[]) => mockCreate(...args),
+      },
     };
   },
 }));
@@ -42,7 +46,9 @@ function makeMockPlace(id: string, name: string): GooglePlace {
 
 describe('convertToVibe', () => {
   beforeEach(async () => {
-    mockGenerateContent = vi.fn().mockResolvedValue({ text: VALID_RESPONSE });
+    mockCreate = vi.fn().mockResolvedValue({
+      choices: [{ message: { content: VALID_RESPONSE } }],
+    });
     const { resetCircuitBreaker } = await import('./gemini-vibe');
     resetCircuitBreaker();
   });
@@ -62,9 +68,11 @@ describe('convertToVibe', () => {
   });
 
   it('should return degraded result on invalid JSON structure', async () => {
-    mockGenerateContent = vi
+    mockCreate = vi
       .fn()
-      .mockResolvedValue({ text: '{"invalid": true}' });
+      .mockResolvedValue({
+        choices: [{ message: { content: '{"invalid": true}' } }],
+      });
 
     const { convertToVibe } = await import('./gemini-vibe');
     const place = makeMockPlace('place_2', 'テスト店');
@@ -75,7 +83,7 @@ describe('convertToVibe', () => {
   });
 
   it('should return degraded result on API error after retries', async () => {
-    mockGenerateContent = vi
+    mockCreate = vi
       .fn()
       .mockRejectedValue(new Error('500 Internal Server Error'));
 
@@ -84,13 +92,15 @@ describe('convertToVibe', () => {
     const result = await convertToVibe(place, 'test-api-key');
 
     expect(result.catchphrase).toBe('ここにしかない空気がある');
-    expect(mockGenerateContent).toHaveBeenCalledTimes(3); // initial + 2 retries
+    expect(mockCreate).toHaveBeenCalledTimes(3); // initial + 2 retries
   }, 15_000);
 });
 
 describe('batchConvertToVibe', () => {
   beforeEach(async () => {
-    mockGenerateContent = vi.fn().mockResolvedValue({ text: VALID_RESPONSE });
+    mockCreate = vi.fn().mockResolvedValue({
+      choices: [{ message: { content: VALID_RESPONSE } }],
+    });
     const { resetCircuitBreaker } = await import('./gemini-vibe');
     resetCircuitBreaker();
   });

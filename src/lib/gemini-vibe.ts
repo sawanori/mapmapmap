@@ -1,8 +1,8 @@
-import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 import type { GooglePlace } from './google-places';
 import type { MoodScore } from '@/types/vibe';
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gpt-4o-mini';
 const MAX_RETRIES = 2;
 const TIMEOUT_MS = 10_000;
 const CIRCUIT_BREAKER_THRESHOLD = 5;
@@ -27,7 +27,7 @@ Output ONLY a valid JSON object with this exact schema:
   "is_rejected": boolean
 }`;
 
-export interface GeminiVibeResult {
+export interface VibeResult {
   catchphrase: string;
   vibe_tags: string[];
   mood_score: MoodScore;
@@ -35,7 +35,10 @@ export interface GeminiVibeResult {
   is_rejected: boolean;
 }
 
-function validateVibeResult(data: unknown): data is GeminiVibeResult {
+// Keep backward-compatible alias
+export type GeminiVibeResult = VibeResult;
+
+function validateVibeResult(data: unknown): data is VibeResult {
   if (typeof data !== 'object' || data === null) return false;
   const obj = data as Record<string, unknown>;
 
@@ -57,7 +60,7 @@ function validateVibeResult(data: unknown): data is GeminiVibeResult {
   return true;
 }
 
-function createDegradedResult(): GeminiVibeResult {
+function createDegradedResult(): VibeResult {
   return {
     catchphrase: 'ここにしかない空気がある',
     vibe_tags: ['#隠れ家', '#散策', '#発見'],
@@ -92,44 +95,37 @@ let consecutiveRateLimits = 0;
 export async function convertToVibe(
   place: GooglePlace,
   apiKey: string,
-): Promise<GeminiVibeResult> {
+): Promise<VibeResult> {
   if (consecutiveRateLimits >= CIRCUIT_BREAKER_THRESHOLD) {
-    console.warn('Gemini circuit breaker open. Returning degraded result.');
+    console.warn('OpenAI circuit breaker open. Returning degraded result.');
     return createDegradedResult();
   }
 
-  const client = new GoogleGenAI({ apiKey });
+  const client = new OpenAI({ apiKey });
   const placeData = buildPlacePrompt(place);
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      const response = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: `Analyze this place and output JSON:\n\n${placeData}` },
+        ],
+        response_format: { type: 'json_object' },
+      }, { timeout: TIMEOUT_MS });
 
-      try {
-        const response = await client.models.generateContent({
-          model: MODEL,
-          contents: `Analyze this place and output JSON:\n\n${placeData}`,
-          config: {
-            systemInstruction: SYSTEM_PROMPT,
-            responseMimeType: 'application/json',
-          },
-        });
+      consecutiveRateLimits = 0;
 
-        consecutiveRateLimits = 0;
+      const text = response.choices[0]?.message?.content ?? '';
+      const parsed = JSON.parse(text);
 
-        const text = response.text ?? '';
-        const parsed = JSON.parse(text);
-
-        if (validateVibeResult(parsed)) {
-          return parsed;
-        }
-
-        console.warn('Gemini returned invalid structure, using degraded result');
-        return createDegradedResult();
-      } finally {
-        clearTimeout(timeoutId);
+      if (validateVibeResult(parsed)) {
+        return parsed;
       }
+
+      console.warn('OpenAI returned invalid structure, using degraded result');
+      return createDegradedResult();
     } catch (error: unknown) {
       const isRateLimit =
         error instanceof Error && error.message.includes('429');
@@ -137,7 +133,7 @@ export async function convertToVibe(
       if (isRateLimit) {
         consecutiveRateLimits++;
         if (consecutiveRateLimits >= CIRCUIT_BREAKER_THRESHOLD) {
-          console.warn('Gemini circuit breaker triggered.');
+          console.warn('OpenAI circuit breaker triggered.');
           return createDegradedResult();
         }
       }
@@ -148,7 +144,7 @@ export async function convertToVibe(
         continue;
       }
 
-      console.error('Gemini conversion failed after retries:', error);
+      console.error('OpenAI conversion failed after retries:', error);
       return createDegradedResult();
     }
   }
@@ -163,8 +159,8 @@ export async function batchConvertToVibe(
   places: GooglePlace[],
   apiKey: string,
   concurrency = 5,
-): Promise<Map<string, GeminiVibeResult>> {
-  const results = new Map<string, GeminiVibeResult>();
+): Promise<Map<string, VibeResult>> {
+  const results = new Map<string, VibeResult>();
 
   for (let i = 0; i < places.length; i += concurrency) {
     const batch = places.slice(i, i + concurrency);

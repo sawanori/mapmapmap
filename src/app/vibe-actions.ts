@@ -126,9 +126,9 @@ export async function searchByMood(
   lng: number,
 ): Promise<VibeSearchResponse> {
   const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
-  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const openaiApiKey = process.env.OPENAI_API_KEY;
 
-  if (!placesApiKey || !geminiApiKey) {
+  if (!placesApiKey || !openaiApiKey) {
     return { success: false, data: [], message: 'API keys not configured.' };
   }
 
@@ -191,7 +191,7 @@ export async function searchByMood(
   >();
 
   if (uncachedPlaces.length > 0) {
-    geminiResults = await batchConvertToVibe(uncachedPlaces, geminiApiKey, 5);
+    geminiResults = await batchConvertToVibe(uncachedPlaces, openaiApiKey, 5);
   }
 
   // 7. Build VibePlace results

@@ -56,7 +56,7 @@ describe('searchByMood', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.GOOGLE_PLACES_API_KEY = 'test-places-key';
-    process.env.GEMINI_API_KEY = 'test-gemini-key';
+    process.env.OPENAI_API_KEY = 'test-openai-key';
     process.env.TURSO_DATABASE_URL = 'libsql://test.turso.io';
     process.env.TURSO_AUTH_TOKEN = 'test-token';
   });
