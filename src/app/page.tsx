@@ -14,10 +14,13 @@ const LikedMap = dynamic(() => import('@/components/LikedMap'), { ssr: false });
 
 type ViewMode = 'mood' | 'cards' | 'exhausted' | 'likedMap';
 
+type GeoStatus = 'loading' | 'granted' | 'denied' | 'unavailable';
+
 export default function Home() {
   const [userLat, setUserLat] = useState(DEFAULT_LAT);
   const [userLng, setUserLng] = useState(DEFAULT_LNG);
   const [viewMode, setViewMode] = useState<ViewMode>('mood');
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>('loading');
 
   const {
     currentMood,
@@ -36,15 +39,20 @@ export default function Home() {
 
   // Geolocation
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setGeoStatus('unavailable');
+      return;
+    }
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         setUserLat(position.coords.latitude);
         setUserLng(position.coords.longitude);
+        setGeoStatus('granted');
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
+          setGeoStatus('denied');
           navigator.geolocation.clearWatch(watchId);
         }
       },
@@ -123,9 +131,17 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center h-full px-4 py-8">
           {/* Header */}
           <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm">
-            <h1 className="text-lg font-bold text-gray-900">
-              VIBE MAP
-            </h1>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">
+                VIBE MAP
+              </h1>
+              <p className="text-[10px] text-gray-400 -mt-0.5">
+                {geoStatus === 'loading' && '位置情報を取得中...'}
+                {geoStatus === 'granted' && `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`}
+                {geoStatus === 'denied' && 'デフォルト位置（みなとみらい）'}
+                {geoStatus === 'unavailable' && 'デフォルト位置（みなとみらい）'}
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               {currentMood && viewMode === 'cards' && likedPlaces.length > 0 && (
                 <button
