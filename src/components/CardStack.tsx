@@ -1,13 +1,19 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useCallback, useEffect, useRef } from 'react';
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform,
+} from 'motion/react';
 import type { VibePlace, Mood } from '@/types/vibe';
 import VibeCard from './VibeCard';
 import LikePassButtons from './LikePassButtons';
 
 const SWIPE_THRESHOLD = 100;
 const VELOCITY_THRESHOLD = 500;
+const EXIT_X = 400;
 
 interface CardStackProps {
   cards: VibePlace[];
@@ -28,13 +34,24 @@ export default function CardStack({
 }: CardStackProps) {
   const currentCard = cards[currentIndex] ?? null;
   const nextCard = cards[currentIndex + 1] ?? null;
+  const exitDirectionRef = useRef<'left' | 'right'>('right');
+
+  // Motion values for drag feedback
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
+  const likeOpacity = useTransform(x, [0, 80], [0, 1]);
+  const nopeOpacity = useTransform(x, [-80, 0], [1, 0]);
 
   const handleLike = useCallback(() => {
-    if (currentCard) onLike(currentCard);
+    if (!currentCard) return;
+    exitDirectionRef.current = 'right';
+    onLike(currentCard);
   }, [currentCard, onLike]);
 
   const handlePass = useCallback(() => {
-    if (currentCard) onPass(currentCard.id);
+    if (!currentCard) return;
+    exitDirectionRef.current = 'left';
+    onPass(currentCard.id);
   }, [currentCard, onPass]);
 
   // Keyboard controls
@@ -87,6 +104,7 @@ export default function CardStack({
           <motion.div
             key={currentCard.id}
             className="absolute inset-0"
+            style={{ x, rotate }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.9}
@@ -109,11 +127,40 @@ export default function CardStack({
               }
             }}
             initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ x: 300, opacity: 0, transition: { duration: 0.2 } }}
+            animate={{ scale: 1, opacity: 1, x: 0 }}
+            exit={{
+              x: exitDirectionRef.current === 'right' ? EXIT_X : -EXIT_X,
+              opacity: 0,
+              rotate: exitDirectionRef.current === 'right' ? 20 : -20,
+              transition: { duration: 0.3 },
+            }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             whileDrag={{ cursor: 'grabbing' }}
           >
+            {/* LIKE stamp overlay */}
+            <motion.div
+              className="absolute top-8 left-6 z-10 pointer-events-none"
+              style={{ opacity: likeOpacity }}
+            >
+              <div className="px-4 py-2 border-4 border-emerald-400 rounded-lg rotate-[-15deg]">
+                <span className="text-3xl font-black text-emerald-400 tracking-wider">
+                  LIKE
+                </span>
+              </div>
+            </motion.div>
+
+            {/* NOPE stamp overlay */}
+            <motion.div
+              className="absolute top-8 right-6 z-10 pointer-events-none"
+              style={{ opacity: nopeOpacity }}
+            >
+              <div className="px-4 py-2 border-4 border-red-400 rounded-lg rotate-[15deg]">
+                <span className="text-3xl font-black text-red-400 tracking-wider">
+                  NOPE
+                </span>
+              </div>
+            </motion.div>
+
             <VibeCard
               place={currentCard}
               mood={mood}

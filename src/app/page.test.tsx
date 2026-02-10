@@ -14,7 +14,7 @@ vi.mock('motion/react', () => ({
     div: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
       const safe: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(props)) {
-        if (!['drag', 'dragConstraints', 'dragElastic', 'initial', 'animate', 'exit', 'transition', 'whileDrag', 'onDragEnd'].includes(k)) {
+        if (!['drag', 'dragConstraints', 'dragElastic', 'initial', 'animate', 'exit', 'transition', 'whileDrag', 'onDragEnd', 'style'].includes(k)) {
           safe[k] = v;
         }
       }
@@ -22,6 +22,8 @@ vi.mock('motion/react', () => ({
     },
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  useMotionValue: (initial: number) => ({ get: () => initial, set: () => {} }),
+  useTransform: () => ({ get: () => 0 }),
 }));
 
 // Mock next/dynamic for LikedMap

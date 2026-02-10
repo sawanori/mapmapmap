@@ -21,13 +21,15 @@ vi.mock('motion/react', () => ({
     ),
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  useMotionValue: (initial: number) => ({ get: () => initial, set: () => {} }),
+  useTransform: () => ({ get: () => 0 }),
 }));
 
 // Filter out motion-specific props that shouldn't be on DOM elements
 function filterDomProps(props: Record<string, unknown>): Record<string, unknown> {
   const motionProps = [
     'drag', 'dragConstraints', 'dragElastic', 'initial', 'animate',
-    'exit', 'transition', 'whileDrag', 'onDragEnd',
+    'exit', 'transition', 'whileDrag', 'onDragEnd', 'style',
   ];
   const filtered: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(props)) {
