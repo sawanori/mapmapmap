@@ -11,8 +11,8 @@ import type { VibePlace, Mood } from '@/types/vibe';
 import VibeCard from './VibeCard';
 import LikePassButtons from './LikePassButtons';
 
-const SWIPE_THRESHOLD = 100;
-const VELOCITY_THRESHOLD = 500;
+const SWIPE_THRESHOLD = 160;
+const VELOCITY_THRESHOLD = 800;
 const EXIT_X = 400;
 
 interface CardStackProps {
@@ -39,8 +39,8 @@ export default function CardStack({
   // Motion values for drag feedback
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
-  const likeOpacity = useTransform(x, [0, 80], [0, 1]);
-  const nopeOpacity = useTransform(x, [-80, 0], [1, 0]);
+  const likeOpacity = useTransform(x, [0, 120], [0, 1]);
+  const nopeOpacity = useTransform(x, [-120, 0], [1, 0]);
 
   const handleLike = useCallback(() => {
     if (!currentCard) return;
@@ -107,7 +107,7 @@ export default function CardStack({
             style={{ x, rotate }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.9}
+            dragElastic={0.6}
             onDragEnd={(_e, info) => {
               const { offset, velocity } = info;
 
