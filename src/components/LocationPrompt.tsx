@@ -64,10 +64,10 @@ export default function LocationPrompt({
         <>
           <div className="text-4xl">📍</div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-sm font-bold text-gray-900">
               近くのスポットを出すために位置情報を使います
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               許可すると、いまいる場所から徒歩で行ける候補を優先して表示します。
             </p>
           </div>
