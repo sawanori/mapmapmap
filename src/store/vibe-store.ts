@@ -65,7 +65,10 @@ export const useVibeStore = create<VibeState>((set, get) => ({
   savedPlaceIds: loadSavedPlaceIds(),
 
   setMood: (mood) => {
-    set({ currentMood: mood, results: [], displayCount: 3, errorMessage: null });
+    set({ currentMood: mood, results: [], displayCount: 3, errorMessage: null, savedPlaceIds: [] });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('saved_place_ids');
+    }
   },
 
   setLocation: (mode, lat, lng) => {
