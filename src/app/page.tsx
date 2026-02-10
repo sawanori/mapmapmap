@@ -137,10 +137,10 @@ export default function Home() {
           <header className="flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
             <div>
               <h1 className="text-lg font-bold text-gray-900">
-                MAPMAPMAP!!!
+                MAPMAPMAP
               </h1>
               <p className="text-xs text-gray-500 -mt-0.5">
-                {geoStatus === 'idle' && '気分に合ったスポットを見つけよう'}
+                {geoStatus === 'idle' && '気分でお店を即決'}
                 {geoStatus === 'loading' && '📍 位置情報を取得中...'}
                 {geoStatus === 'granted' && coords && `📍 ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}
                 {geoStatus === 'denied' && '📍 駅名検索 / デフォルト位置'}

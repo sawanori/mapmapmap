@@ -12,12 +12,12 @@ describe('MoodSelector', () => {
     expect(screen.getByText('集中')).toBeInTheDocument();
   });
 
-  it('should render English sub-labels', () => {
+  it('should render English sub-labels in parentheses', () => {
     render(<MoodSelector onSelect={vi.fn()} />);
 
-    expect(screen.getByText('Chill')).toBeInTheDocument();
-    expect(screen.getByText('Party')).toBeInTheDocument();
-    expect(screen.getByText('Focus')).toBeInTheDocument();
+    expect(screen.getByText('(Chill)')).toBeInTheDocument();
+    expect(screen.getByText('(Party)')).toBeInTheDocument();
+    expect(screen.getByText('(Focus)')).toBeInTheDocument();
   });
 
   it('should render heading text', () => {

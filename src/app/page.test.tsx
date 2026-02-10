@@ -89,9 +89,9 @@ describe('Home page - Swipe flow', () => {
     expect(screen.getByText('集中')).toBeInTheDocument();
   });
 
-  it('should show MAPMAPMAP!!! heading', () => {
+  it('should show MAPMAPMAP heading', () => {
     render(<Home />);
-    expect(screen.getByText('MAPMAPMAP!!!')).toBeInTheDocument();
+    expect(screen.getByText('MAPMAPMAP')).toBeInTheDocument();
   });
 
   it('should NOT call geolocation on mount', () => {
@@ -270,6 +270,6 @@ describe('Home page - Swipe flow', () => {
 
   it('should show idle header text before geolocation', () => {
     render(<Home />);
-    expect(screen.getByText('気分に合ったスポットを見つけよう')).toBeInTheDocument();
+    expect(screen.getByText('気分でお店を即決')).toBeInTheDocument();
   });
 });

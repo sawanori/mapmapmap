@@ -47,9 +47,7 @@ export default function MoodSelector({ onSelect }: MoodSelectorProps) {
             <div className="text-left">
               <span className="block text-lg font-semibold text-gray-900">
                 {MOOD_LABELS[mood].ja}
-              </span>
-              <span className="block text-[10px] uppercase tracking-wider text-gray-400">
-                {MOOD_LABELS[mood].en}
+                <span className="text-xs font-normal text-gray-400 ml-1">({MOOD_LABELS[mood].en})</span>
               </span>
               <span className="block text-xs text-gray-400 mt-0.5">
                 {MOOD_EXAMPLES[mood]}
@@ -58,6 +56,10 @@ export default function MoodSelector({ onSelect }: MoodSelectorProps) {
           </button>
         ))}
       </div>
+
+      <p className="text-[11px] text-gray-400 text-center">
+        位置情報は「近くを出す」ためだけに使います（拒否OK）
+      </p>
     </div>
   );
 }
