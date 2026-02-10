@@ -36,8 +36,8 @@ describe('MoodSelector', () => {
     render(<MoodSelector onSelect={vi.fn()} />);
 
     expect(screen.getByText('カフェ・公園・静かなバー')).toBeInTheDocument();
-    expect(screen.getByText('ライブバー・クラブ・居酒屋')).toBeInTheDocument();
-    expect(screen.getByText('ワークスペース・図書館・書店')).toBeInTheDocument();
+    expect(screen.getByText('居酒屋・カラオケ・イベント')).toBeInTheDocument();
+    expect(screen.getByText('コワーキング・電源カフェ・図書館')).toBeInTheDocument();
   });
 
   it('should call onSelect with correct mood when clicked', async () => {

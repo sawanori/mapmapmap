@@ -24,3 +24,11 @@ export function getDistanceFromLatLonInKm(
 function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
+
+/**
+ * Convert distance in km to estimated walk time in minutes.
+ * Assumes walking speed of 80m/min (4.8 km/h).
+ */
+export function distanceToWalkMinutes(distanceKm: number): number {
+  return Math.round((distanceKm * 1000) / 80);
+}

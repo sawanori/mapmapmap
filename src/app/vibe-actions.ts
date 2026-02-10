@@ -8,11 +8,24 @@ import { selectHeroPhoto } from '@/lib/photo-curator';
 import { getDistanceFromLatLonInKm } from '@/lib/geo';
 import { mapGoogleType, DEFAULT_RADIUS_KM } from '@/lib/constants';
 import { MOOD_QUERIES } from '@/types/vibe';
-import type { VibePlace, Mood } from '@/types/vibe';
+import type { VibePlace, Mood, SearchFilters } from '@/types/vibe';
+import { calculateScore } from '@/lib/scoring';
 import { createClient } from '@libsql/client';
 
 const MAX_GEMINI_PLACES = 10;
 const RADIUS_EXPANSION_FACTOR = 1.5;
+
+function parsePriceLevel(raw?: string): number | null {
+  if (!raw) return null;
+  const map: Record<string, number> = {
+    PRICE_LEVEL_FREE: 0,
+    PRICE_LEVEL_INEXPENSIVE: 1,
+    PRICE_LEVEL_MODERATE: 2,
+    PRICE_LEVEL_EXPENSIVE: 3,
+    PRICE_LEVEL_VERY_EXPENSIVE: 4,
+  };
+  return map[raw] ?? null;
+}
 
 interface VibeSearchResponse {
   success: boolean;
@@ -110,6 +123,8 @@ function buildVibePlace(
     category: mapGoogleType(place.types),
     rating: place.rating ?? null,
     address: place.formattedAddress ?? null,
+    openNow: place.regularOpeningHours?.openNow ?? null,
+    priceLevel: parsePriceLevel(place.priceLevel),
     openingHours: place.regularOpeningHours?.weekdayDescriptions ?? null,
     distance: getDistanceFromLatLonInKm(
       userLat,
@@ -124,6 +139,7 @@ export async function searchByMood(
   mood: Mood,
   lat: number,
   lng: number,
+  filters?: SearchFilters,
 ): Promise<VibeSearchResponse> {
   const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
   const openaiApiKey = process.env.OPENAI_API_KEY;
@@ -208,6 +224,9 @@ export async function searchByMood(
         cachedVibe.lat,
         cachedVibe.lng,
       );
+      // Backfill new fields for old cache entries
+      cachedVibe.openNow = cachedVibe.openNow ?? null;
+      cachedVibe.priceLevel = cachedVibe.priceLevel ?? null;
       vibes.push(cachedVibe);
       continue;
     }
@@ -223,10 +242,29 @@ export async function searchByMood(
   // 8. Cache new results (fire and forget)
   setCachedVibes(toCache).catch(() => {});
 
-  // 9. Filter rejected + sort by mood score descending
-  const filtered = vibes
-    .filter((v) => !v.isRejected)
-    .sort((a, b) => b.moodScore[mood] - a.moodScore[mood]);
+  // 9. Filter rejected
+  let filtered = vibes.filter((v) => !v.isRejected);
+
+  // 10. Apply server-side filters
+  if (filters?.openNow) {
+    filtered = filtered.filter((p) => p.openNow !== false); // null (unknown) passes
+  }
+  if (filters?.maxPriceLevel != null) {
+    filtered = filtered.filter(
+      (p) => p.priceLevel == null || p.priceLevel <= filters.maxPriceLevel!,
+    );
+  }
+  if (filters?.keyword) {
+    const kw = filters.keyword.toLowerCase();
+    filtered = filtered.filter((p) => p.name.toLowerCase().includes(kw));
+  }
+
+  // 11. Sort by weighted score descending
+  filtered.sort(
+    (a, b) =>
+      calculateScore(b, mood, DEFAULT_RADIUS_KM) -
+      calculateScore(a, mood, DEFAULT_RADIUS_KM),
+  );
 
   return { success: true, data: filtered };
 }

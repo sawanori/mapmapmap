@@ -25,8 +25,13 @@ export interface VibePlace {
   address: string | null;
   openingHours: string[] | null;
 
+  // --- Google Places API 追加フィールド ---
+  openNow: boolean | null;     // regularOpeningHours.openNow
+  priceLevel: number | null;   // Google Places priceLevel (0-4)
+
   // --- クライアント側算出フィールド ---
   distance: number; // km (Haversine)
+  // NOTE: walkTimeSeconds は持たない。表示時に geo.ts の distanceToWalkMinutes() で算出
 }
 
 /** UI のムード選択肢。MoodScore のキーと一致する。 */
@@ -35,6 +40,16 @@ export type Mood = 'chill' | 'party' | 'focus';
 /** Gemini API 失敗時のフォールバック用 */
 export interface DegradedVibePlace extends VibePlace {
   isDegraded: true;
+}
+
+/** 位置情報ステータス (page.tsx, LocationPrompt.tsx で共有) */
+export type GeoStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'unavailable';
+
+/** サーバーアクションに渡すフィルター (radiusMeters はフロントサイドのみ) */
+export interface SearchFilters {
+  openNow?: boolean;
+  maxPriceLevel?: number | null;
+  keyword?: string | null;
 }
 
 /** Mood → Google Places Text Search クエリ (日本語) */

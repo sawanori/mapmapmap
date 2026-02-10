@@ -1,132 +1,184 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/lib/constants';
 import { useVibeStore } from '@/store/vibe-store';
+import { openRoute } from '@/lib/route';
 import MoodSelector from '@/components/MoodSelector';
 import LocationPrompt from '@/components/LocationPrompt';
-import CardStack from '@/components/CardStack';
-import CardsExhausted from '@/components/CardsExhausted';
-import type { Mood } from '@/types/vibe';
-import type { VibePlace } from '@/types/vibe';
+import StationSearch from '@/components/StationSearch';
+import ResultsScreen from '@/components/ResultsScreen';
+import PlaceDetail from '@/components/PlaceDetail';
+import type { Mood, VibePlace, GeoStatus } from '@/types/vibe';
 
 const LikedMap = dynamic(() => import('@/components/LikedMap'), { ssr: false });
 
-type ViewMode = 'mood' | 'locating' | 'cards' | 'exhausted' | 'likedMap';
-
-type GeoStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'unavailable';
+type ViewMode = 'mood' | 'permission_gate' | 'station_search' | 'results' | 'detail' | 'likedMap';
 
 export default function Home() {
-  const [userLat, setUserLat] = useState(DEFAULT_LAT);
-  const [userLng, setUserLng] = useState(DEFAULT_LNG);
   const [viewMode, setViewMode] = useState<ViewMode>('mood');
   const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle');
+  const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
 
   const {
     currentMood,
-    cards,
-    currentIndex,
-    likedPlaces,
+    coords,
+    filters,
+    results,
+    displayCount,
     isLoading,
-    isExhausted,
     errorMessage,
+    savedPlaceIds,
     setMood,
-    loadCards,
-    like,
-    pass,
+    setLocation,
+    updateFilter,
+    loadResults,
+    loadMore,
+    toggleSaved,
     reset,
   } = useVibeStore();
 
-  // Transition to cards/exhausted based on store state
-  useEffect(() => {
-    if (isExhausted && viewMode === 'cards') {
-      setViewMode('exhausted');
-    }
-  }, [isExhausted, viewMode]);
-
+  // Mood selection → decide next screen
   const handleMoodSelect = useCallback(
-    async (mood: Mood) => {
+    (mood: Mood) => {
       setMood(mood);
       if (geoStatus === 'granted' || geoStatus === 'denied' || geoStatus === 'unavailable') {
-        // Already resolved (granted, denied, or unavailable) → skip LocationPrompt
-        useVibeStore.setState({ isLoading: true });
-        setViewMode('cards');
-        await loadCards(userLat, userLng);
+        // Already resolved → go to results directly
+        setViewMode('results');
+        // loadResults reads from store (coords already set)
+        loadResults();
       } else {
-        // idle → show LocationPrompt
-        setViewMode('locating');
+        // idle → show permission gate
+        setViewMode('permission_gate');
       }
     },
-    [setMood, geoStatus, loadCards, userLat, userLng],
+    [geoStatus, setMood, loadResults],
   );
 
+  // Location resolved from permission gate
   const handleLocationResolved = useCallback(
-    async (lat: number, lng: number, status: GeoStatus) => {
-      setUserLat(lat);
-      setUserLng(lng);
+    (lat: number, lng: number, status: GeoStatus) => {
       setGeoStatus(status);
-      useVibeStore.setState({ isLoading: true });
-      setViewMode('cards');
-      await loadCards(lat, lng);
+      setLocation('geo', lat, lng);
+      setViewMode('results');
+      // Need to set coords before loadResults reads them
+      useVibeStore.setState({
+        locationMode: 'geo',
+        coords: { lat, lng },
+        isLoading: true,
+      });
+      loadResults();
     },
-    [loadCards],
+    [setLocation, loadResults],
   );
 
+  // Station search callback
+  const handleStationSearch = useCallback(() => {
+    setViewMode('station_search');
+  }, []);
+
+  // Station search submitted
+  const handleStationSubmit = useCallback(
+    (lat: number, lng: number, _stationName: string) => {
+      setGeoStatus('denied'); // Mark as resolved (non-geo)
+      setLocation('station', lat, lng);
+      setViewMode('results');
+      useVibeStore.setState({
+        locationMode: 'station',
+        coords: { lat, lng },
+        isLoading: true,
+      });
+      loadResults();
+    },
+    [setLocation, loadResults],
+  );
+
+  // Back from station search to permission gate
+  const handleBackFromStation = useCallback(() => {
+    setViewMode('permission_gate');
+  }, []);
+
+  // Filter change → reload results
+  const handleFilterChange = useCallback(
+    (partial: Partial<typeof filters>) => {
+      updateFilter(partial);
+      // loadResults will be called after filter update
+      // We need to trigger it after state update
+      setTimeout(() => {
+        useVibeStore.getState().loadResults();
+      }, 0);
+    },
+    [updateFilter],
+  );
+
+  // Place detail
+  const handlePlaceSelect = useCallback((place: VibePlace) => {
+    setSelectedPlace(place);
+    setViewMode('detail');
+  }, []);
+
+  const handleBackFromDetail = useCallback(() => {
+    setSelectedPlace(null);
+    setViewMode('results');
+  }, []);
+
+  // Route start
+  const handleStartRoute = useCallback(
+    (place: VibePlace) => {
+      const c = coords ?? { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
+      openRoute(place, c.lat, c.lng);
+    },
+    [coords],
+  );
+
+  // Change mood
   const handleChangeMood = useCallback(() => {
     reset();
     setViewMode('mood');
   }, [reset]);
 
-  const handleExpandRadius = useCallback(async () => {
-    setViewMode('cards');
-    await loadCards(userLat, userLng);
-  }, [loadCards, userLat, userLng]);
+  // Saved places
+  const savedPlaces = results.filter((p) => savedPlaceIds.includes(p.id));
 
+  // Show liked map
   const handleShowLikedMap = useCallback(() => {
     setViewMode('likedMap');
   }, []);
 
   const handleBackFromMap = useCallback(() => {
-    if (isExhausted) {
-      setViewMode('exhausted');
-    } else {
-      setViewMode('cards');
-    }
-  }, [isExhausted]);
-
-  const handleLike = useCallback(
-    (place: VibePlace) => {
-      like(place);
-    },
-    [like],
-  );
-
-  const handlePass = useCallback(
-    (placeId: string) => {
-      pass(placeId);
-    },
-    [pass],
-  );
+    setViewMode('results');
+  }, []);
 
   return (
     <main className="relative w-screen h-dvh overflow-hidden bg-gray-50">
       {/* Liked Map (fullscreen) */}
       {viewMode === 'likedMap' && (
         <LikedMap
-          places={likedPlaces}
-          userLat={userLat}
-          userLng={userLng}
+          places={savedPlaces}
+          userLat={coords?.lat ?? DEFAULT_LAT}
+          userLng={coords?.lng ?? DEFAULT_LNG}
           showUserMarker={geoStatus === 'granted'}
           onBack={handleBackFromMap}
         />
       )}
 
-      {/* Main content area (centered) */}
-      {viewMode !== 'likedMap' && (
-        <div className="flex flex-col items-center justify-center h-full px-4 py-8">
+      {/* Detail (fullscreen) */}
+      {viewMode === 'detail' && selectedPlace && (
+        <PlaceDetail
+          place={selectedPlace}
+          isSaved={savedPlaceIds.includes(selectedPlace.id)}
+          onStartRoute={() => handleStartRoute(selectedPlace)}
+          onToggleSaved={() => toggleSaved(selectedPlace.id)}
+          onBack={handleBackFromDetail}
+        />
+      )}
+
+      {/* Main content area */}
+      {viewMode !== 'likedMap' && viewMode !== 'detail' && (
+        <div className="flex flex-col h-full">
           {/* Header */}
-          <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm">
+          <header className="flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
             <div>
               <h1 className="text-lg font-bold text-gray-900">
                 MAPMAPMAP!!!
@@ -134,22 +186,22 @@ export default function Home() {
               <p className="text-xs text-gray-500 -mt-0.5">
                 {geoStatus === 'idle' && '気分に合ったスポットを見つけよう'}
                 {geoStatus === 'loading' && '📍 位置情報を取得中...'}
-                {geoStatus === 'granted' && `📍 ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`}
-                {geoStatus === 'denied' && '📍 デフォルト位置（みなとみらい）'}
+                {geoStatus === 'granted' && coords && `📍 ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}
+                {geoStatus === 'denied' && '📍 駅名検索 / デフォルト位置'}
                 {geoStatus === 'unavailable' && '📍 デフォルト位置（みなとみらい）'}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {currentMood && viewMode === 'cards' && likedPlaces.length > 0 && (
+              {currentMood && viewMode === 'results' && savedPlaceIds.length > 0 && (
                 <button
                   onClick={handleShowLikedMap}
                   className="px-3 py-1.5 text-xs font-medium text-blue-800 bg-blue-50 rounded-full"
-                  aria-label={`お気に入り${likedPlaces.length}件を地図で見る`}
+                  aria-label={`お気に入り${savedPlaceIds.length}件を地図で見る`}
                 >
-                  ♥ {likedPlaces.length}
+                  ♥ {savedPlaceIds.length}
                 </button>
               )}
-              {currentMood && (
+              {currentMood && viewMode !== 'results' && (
                 <button
                   onClick={handleChangeMood}
                   className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white rounded-full border border-gray-200"
@@ -161,75 +213,57 @@ export default function Home() {
             </div>
           </header>
 
-          {/* Mood Selection */}
-          {viewMode === 'mood' && (
-            <MoodSelector onSelect={handleMoodSelect} />
-          )}
+          {/* Content */}
+          <div className="flex-1 overflow-hidden">
+            {/* Mood Selection */}
+            {viewMode === 'mood' && (
+              <div className="flex items-center justify-center h-full">
+                <MoodSelector onSelect={handleMoodSelect} />
+              </div>
+            )}
 
-          {/* Location Prompt */}
-          {viewMode === 'locating' && (
-            <LocationPrompt
-              onResolved={handleLocationResolved}
-              defaultLat={DEFAULT_LAT}
-              defaultLng={DEFAULT_LNG}
-            />
-          )}
+            {/* Permission Gate */}
+            {viewMode === 'permission_gate' && (
+              <div className="flex items-center justify-center h-full">
+                <LocationPrompt
+                  onResolved={handleLocationResolved}
+                  onStationSearch={handleStationSearch}
+                  defaultLat={DEFAULT_LAT}
+                  defaultLng={DEFAULT_LNG}
+                />
+              </div>
+            )}
 
-          {/* Loading */}
-          {viewMode === 'cards' && isLoading && (
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-800 rounded-full animate-spin" />
-              <p className="text-sm text-gray-500">スポットを探しています...</p>
-            </div>
-          )}
+            {/* Station Search */}
+            {viewMode === 'station_search' && (
+              <div className="flex items-center justify-center h-full">
+                <StationSearch
+                  onSubmit={handleStationSubmit}
+                  onBack={handleBackFromStation}
+                />
+              </div>
+            )}
 
-          {/* Card Stack */}
-          {viewMode === 'cards' && !isLoading && cards.length > 0 && (
-            <div className="w-full max-w-sm mt-14">
-              <CardStack
-                cards={cards}
-                currentIndex={currentIndex}
-                mood={currentMood ?? undefined}
-                onLike={handleLike}
-                onPass={handlePass}
+            {/* Results */}
+            {viewMode === 'results' && currentMood && (
+              <ResultsScreen
+                results={results}
+                displayCount={displayCount}
+                mood={currentMood}
+                filters={filters}
+                savedPlaceIds={savedPlaceIds}
+                isLoading={isLoading}
+                errorMessage={errorMessage}
+                onFilterChange={handleFilterChange}
+                onPlaceSelect={handlePlaceSelect}
+                onStartRoute={handleStartRoute}
+                onToggleSaved={toggleSaved}
+                onLoadMore={loadMore}
+                onChangeMood={handleChangeMood}
+                onStationSearch={handleStationSearch}
               />
-            </div>
-          )}
-
-          {/* No results */}
-          {viewMode === 'cards' && !isLoading && cards.length === 0 && !isExhausted && (
-            <div className="text-center">
-              <p className="text-gray-600 text-sm">
-                {errorMessage ?? '近くにスポットが見つかりませんでした'}
-              </p>
-              <button
-                onClick={handleChangeMood}
-                className="mt-4 px-4 py-2 text-sm text-blue-800 bg-blue-50 rounded-xl"
-              >
-                別の気分で探す
-              </button>
-            </div>
-          )}
-
-          {/* Cards Exhausted */}
-          {viewMode === 'exhausted' && (
-            <CardsExhausted
-              likedCount={likedPlaces.length}
-              onExpandRadius={handleExpandRadius}
-              onChangeMood={handleChangeMood}
-              onShowLikedMap={handleShowLikedMap}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Error toast */}
-      {errorMessage && (viewMode === 'mood' || viewMode === 'exhausted') && (
-        <div
-          role="alert"
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow text-sm max-w-sm text-center"
-        >
-          {errorMessage}
+            )}
+          </div>
         </div>
       )}
     </main>

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { VibePlace } from '@/types/vibe';
+import { makeMockVibePlace } from '@/test-utils/mock-data';
 
 // Mock react-map-gl
 vi.mock('react-map-gl', () => {
@@ -33,26 +33,6 @@ vi.mock('react-map-gl', () => {
 });
 
 import LikedMap from './LikedMap';
-
-function makeMockVibePlace(id: string, name: string): VibePlace {
-  return {
-    id,
-    name,
-    catchphrase: '素敵な場所',
-    vibeTags: ['#tag'],
-    heroImageUrl: '',
-    moodScore: { chill: 50, party: 50, focus: 50 },
-    hiddenGemsInfo: '',
-    isRejected: false,
-    lat: 35.65,
-    lng: 139.7,
-    category: 'Cafe',
-    rating: 4.0,
-    address: '東京都',
-    openingHours: null,
-    distance: 1.0,
-  };
-}
 
 describe('LikedMap', () => {
   it('should render the map', () => {
@@ -124,7 +104,7 @@ describe('LikedMap', () => {
 
     await user.click(screen.getByTestId('marker'));
     expect(screen.getByRole('dialog', { name: 'カフェAの詳細' })).toBeInTheDocument();
-    expect(screen.getByText('素敵な場所')).toBeInTheDocument();
+    expect(screen.getByText('素敵な空間')).toBeInTheDocument();
     expect(screen.getByText('Google Maps で開く →')).toBeInTheDocument();
   });
 
@@ -144,7 +124,7 @@ describe('LikedMap', () => {
 
   it('should show rating and category in detail card', async () => {
     const user = userEvent.setup();
-    const places = [makeMockVibePlace('p1', 'カフェA')];
+    const places = [makeMockVibePlace('p1', 'カフェA', { rating: 4.0, distance: 1.0 })];
     render(
       <LikedMap places={places} onBack={vi.fn()} />,
     );

@@ -34,6 +34,7 @@ export interface GooglePlace {
     periods?: unknown[];
     weekdayDescriptions: string[];
   };
+  priceLevel?: string; // "PRICE_LEVEL_FREE" | "PRICE_LEVEL_INEXPENSIVE" | "PRICE_LEVEL_MODERATE" | "PRICE_LEVEL_EXPENSIVE" | "PRICE_LEVEL_VERY_EXPENSIVE"
   reviews?: GooglePlaceReview[];
   photos?: GooglePlacePhoto[];
 }
@@ -47,6 +48,7 @@ const FIELD_MASK = [
   'places.rating',
   'places.formattedAddress',
   'places.regularOpeningHours',
+  'places.priceLevel',
 ].join(',');
 
 /** reviews と photos を含む拡張フィールドマスク (追加課金あり) */

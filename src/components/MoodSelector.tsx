@@ -15,8 +15,8 @@ const MOOD_ICONS: Record<Mood, string> = {
 
 const MOOD_EXAMPLES: Record<Mood, string> = {
   chill: 'カフェ・公園・静かなバー',
-  party: 'ライブバー・クラブ・居酒屋',
-  focus: 'ワークスペース・図書館・書店',
+  party: '居酒屋・カラオケ・イベント',
+  focus: 'コワーキング・電源カフェ・図書館',
 };
 
 const MOOD_ORDER: Mood[] = ['chill', 'party', 'focus'];
@@ -26,7 +26,7 @@ export default function MoodSelector({ onSelect }: MoodSelectorProps) {
     <div className="flex flex-col items-center justify-center gap-8 px-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900">今の気分は？</h1>
-        <p className="text-sm text-gray-500 mt-2">気分を選ぶだけ。近くの&quot;ちょうどいい場所&quot;を見つける。</p>
+        <p className="text-sm text-gray-500 mt-2">気分を選ぶだけ。近くの「ちょうどいい場所」を3つ出す。</p>
       </div>
 
       <div

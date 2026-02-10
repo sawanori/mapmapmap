@@ -1,27 +1,28 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-
-type GeoStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'unavailable';
+import type { GeoStatus } from '@/types/vibe';
 
 interface LocationPromptProps {
   onResolved: (lat: number, lng: number, status: GeoStatus) => void;
+  onStationSearch: () => void;
   defaultLat: number;
   defaultLng: number;
 }
 
-export default function LocationPrompt({ onResolved, defaultLat, defaultLng }: LocationPromptProps) {
+export default function LocationPrompt({
+  onResolved,
+  onStationSearch,
+  defaultLat,
+  defaultLng,
+}: LocationPromptProps) {
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState(false);
   const cancelledRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       cancelledRef.current = true;
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current);
-      }
     };
   }, []);
 
@@ -40,21 +41,22 @@ export default function LocationPrompt({ onResolved, defaultLat, defaultLng }: L
       },
       (error) => {
         if (cancelledRef.current) return;
-        const status: GeoStatus = error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable';
         setLocating(false);
-        setDenied(true);
-        timerRef.current = setTimeout(() => {
-          if (cancelledRef.current) return;
-          onResolved(defaultLat, defaultLng, status);
-        }, 1500);
+        if (error.code === error.PERMISSION_DENIED) {
+          setDenied(true);
+        } else {
+          // POSITION_UNAVAILABLE or TIMEOUT
+          onResolved(defaultLat, defaultLng, 'unavailable');
+        }
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
     );
   }, [onResolved, defaultLat, defaultLng]);
 
-  const handleSkip = useCallback(() => {
-    onResolved(defaultLat, defaultLng, 'idle');
-  }, [onResolved, defaultLat, defaultLng]);
+  const handleRetryPermission = useCallback(() => {
+    setDenied(false);
+    handleAllow();
+  }, [handleAllow]);
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 px-6 text-center">
@@ -62,8 +64,12 @@ export default function LocationPrompt({ onResolved, defaultLat, defaultLng }: L
         <>
           <div className="text-4xl">📍</div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">現在地を使ってもいい？</h2>
-            <p className="text-sm text-gray-500 mt-1">近くのスポットを見つけるために使います</p>
+            <h2 className="text-lg font-bold text-gray-900">
+              近くのスポットを出すために位置情報を使います
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              許可すると、いまいる場所から徒歩で行ける候補を優先して表示します。
+            </p>
           </div>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button
@@ -76,24 +82,39 @@ export default function LocationPrompt({ onResolved, defaultLat, defaultLng }: L
               {locating && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
-              {locating ? '取得中...' : '現在地を使う'}
+              {locating ? '取得中...' : '位置情報を許可して探す'}
             </button>
             <button
-              onClick={handleSkip}
+              onClick={onStationSearch}
               disabled={locating}
               className="px-6 py-3 text-sm text-gray-500 hover:text-gray-700 transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              みなとみらいで探す
+              駅名で探す
             </button>
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-4">
           <div className="text-4xl">📍</div>
           <p className="text-sm text-gray-600">
-            位置情報が利用できませんでした。デフォルト位置で探します...
+            位置情報が使えないため、駅名で探せます。
           </p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button
+              onClick={onStationSearch}
+              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-2xl
+                         hover:bg-blue-700 active:scale-[0.98] transition-all"
+            >
+              駅名で探す
+            </button>
+            <button
+              onClick={handleRetryPermission}
+              className="px-6 py-3 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              再度許可を試す
+            </button>
+          </div>
         </div>
       )}
     </div>

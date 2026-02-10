@@ -1,0 +1,396 @@
+{
+  "document_type": "implementation_brief",
+  "project": {
+    "name": "MAPMAPMAP",
+    "url": "https://mapmapmap-one.vercel.app/",
+    "goal": "Make decision-to-route within ~10 seconds using a mood-first flow. Keep the product identity 'mood -> instant decision' strong; avoid turning into a generic search app."
+  },
+  "product_decision": {
+    "question": "Should we add normal search?",
+    "decision": "Do NOT add a normal search bar on the Home screen. Add keyword search only as an optional fallback at the bottom of Results, while making filter chips the primary refinement mechanism.",
+    "rationale": [
+      "A prominent search bar dilutes the core value proposition and increases cognitive load.",
+      "Mood-first is the brand differentiator; keyword search pushes users back into Google Maps behavior.",
+      "Filter chips satisfy 80% of 'search' needs without breaking the fast decision loop."
+    ],
+    "ui_policy": {
+      "home_screen": "No search UI.",
+      "results_screen": "Filter chips at top; keyword search only as a secondary, visually de-emphasized component at the bottom."
+    }
+  },
+  "north_star_metrics": {
+    "primary": [
+      {
+        "name": "time_to_decision",
+        "definition": "Time from opening app (or arriving on Home) to tapping 'Start Route'.",
+        "target": "<= 10s for returning users; <= 20s for first-time users."
+      },
+      {
+        "name": "decision_rate",
+        "definition": "Sessions where user reaches route_start / sessions with results_shown.",
+        "target": ">= 25% early MVP; iterate upward."
+      }
+    ],
+    "secondary": [
+      {
+        "name": "permission_accept_rate",
+        "definition": "permission_allowed / permission_shown",
+        "target": ">= 55% by delaying permission until mood intent is expressed."
+      },
+      {
+        "name": "bounce_rate_home",
+        "definition": "Sessions exiting before mood_selected",
+        "target": "<= 35%"
+      },
+      {
+        "name": "save_rate",
+        "definition": "saved_toggled(true) / place_opened",
+        "target": ">= 10%"
+      }
+    ]
+  },
+  "ux_principles": [
+    "Intent first: ask mood before asking for location permission.",
+    "Instant decision: show 3 curated cards first; map is optional secondary.",
+    "No dead ends: every failure state offers a next action.",
+    "One-screen clarity: users can predict what happens next."
+  ],
+  "user_flow": {
+    "flow_id": "mood_to_route",
+    "states": [
+      {
+        "state": "HOME",
+        "entry_conditions": "User visits app root",
+        "ui": {
+          "headline": "気分に合ったスポットを見つけよう",
+          "subheadline": "気分を選ぶだけ。近くの「ちょうどいい場所」を3つ出す。",
+          "mood_cards": [
+            { "id": "chill", "label": "まったり", "examples": ["カフェ", "公園", "静かなバー"] },
+            { "id": "party", "label": "ワイワイ", "examples": ["居酒屋", "カラオケ", "イベント"] },
+            { "id": "focus", "label": "集中", "examples": ["コワーキング", "電源カフェ", "図書館"] }
+          ],
+          "notes": "No location permission request here. No search bar here."
+        },
+        "actions": [
+          { "type": "select_mood", "next_state": "PERMISSION_GATE" }
+        ]
+      },
+      {
+        "state": "PERMISSION_GATE",
+        "ui": {
+          "headline": "近くのスポットを出すために位置情報を使います",
+          "body": "許可すると、いまいる場所から徒歩で行ける候補を優先して表示します。",
+          "primary_button": "位置情報を許可して探す",
+          "secondary_button": "駅名で探す"
+        },
+        "actions": [
+          { "type": "permission_allow", "next_state": "RESULTS" },
+          { "type": "permission_deny", "next_state": "STATION_SEARCH" },
+          { "type": "skip_to_station", "next_state": "STATION_SEARCH" }
+        ],
+        "acceptance_criteria": [
+          "Permission prompt is triggered only after mood selection.",
+          "If permission denied, user can still reach results via station."
+        ]
+      },
+      {
+        "state": "STATION_SEARCH",
+        "ui": {
+          "headline": "駅名で探す",
+          "input_placeholder": "例：渋谷 / 横浜 / 大阪",
+          "cta": "このエリアで探す"
+        },
+        "actions": [
+          { "type": "submit_station", "next_state": "RESULTS" }
+        ],
+        "acceptance_criteria": [
+          "Users who deny location can still get results using station input."
+        ]
+      },
+      {
+        "state": "RESULTS",
+        "ui": {
+          "header": "気分: {mood_label}",
+          "chips_primary": [
+            {
+              "id": "radius",
+              "type": "segmented",
+              "options": [
+                { "label": "徒歩10分", "value": 900 },
+                { "label": "徒歩20分", "value": 1800 }
+              ]
+            },
+            { "id": "open_now", "type": "toggle", "label": "営業中" },
+            {
+              "id": "price",
+              "type": "segmented_optional",
+              "options": [
+                { "label": "~¥1000", "value": 1 },
+                { "label": "~¥3000", "value": 2 },
+                { "label": "指定なし", "value": null }
+              ]
+            }
+          ],
+          "cards": {
+            "initial_count": 3,
+            "card_fields_minimum": ["name", "walk_time_or_distance", "open_now", "price_level_optional", "tags"],
+            "cta_primary": "ルート開始",
+            "cta_secondary": "行きたい"
+          },
+          "secondary_section": {
+            "keyword_search_label": "店名・ジャンルで探す（任意）",
+            "keyword_search_placement": "Bottom of results screen, visually de-emphasized"
+          },
+          "optional_map": {
+            "display": "Collapsed by default",
+            "toggle_label": "地図で見る"
+          }
+        },
+        "actions": [
+          { "type": "toggle_chip", "effect": "refetch_or_refilter_results" },
+          { "type": "open_place_detail", "next_state": "DETAIL" },
+          { "type": "start_route", "effect": "open_external_map" },
+          { "type": "keyword_search", "effect": "refetch_or_refilter_results" },
+          { "type": "load_more", "effect": "append_next_results_page" }
+        ],
+        "acceptance_criteria": [
+          "User sees 3 cards immediately (no map-first).",
+          "Chips modify the visible results.",
+          "Keyword search is present only here and not on Home."
+        ]
+      },
+      {
+        "state": "DETAIL",
+        "ui": {
+          "fields_minimum": ["name", "distance", "open_now", "hours_optional", "price_level_optional", "tags", "address_optional"],
+          "primary_button": "ルート開始",
+          "secondary_button": "行きたい"
+        },
+        "actions": [
+          { "type": "start_route", "effect": "open_external_map" },
+          { "type": "toggle_save", "effect": "persist_local" }
+        ]
+      }
+    ]
+  },
+  "recommendation_logic": {
+    "mvp_display_strategy": {
+      "initial_cards": 3,
+      "reason": "Force quick decision; reduces scrolling and cognitive load.",
+      "load_more": "User-initiated"
+    },
+    "scoring": {
+      "approach": "Simple weighted score; implement fast and iterate.",
+      "features": [
+        { "name": "distance", "weight": 0.45, "note": "Closer is better." },
+        { "name": "open_now", "weight": 0.25, "note": "Open now gets boost." },
+        { "name": "rating", "weight": 0.20, "note": "If available from source." },
+        { "name": "mood_category_match", "weight": 0.10, "note": "Only if category data exists." }
+      ],
+      "fallbacks": [
+        "If rating unavailable, redistribute weight to distance/open_now.",
+        "If open_now unavailable, ignore and rely on distance/rating."
+      ]
+    },
+    "mood_to_category_mapping": {
+      "chill": ["cafe", "park", "bar", "tea", "bakery"],
+      "party": ["izakaya", "bar", "karaoke", "live_music", "event"],
+      "focus": ["coworking", "library", "cafe", "workspace"]
+    }
+  },
+  "data_contracts": {
+    "place_model": {
+      "id": "string",
+      "name": "string",
+      "lat": "number",
+      "lng": "number",
+      "distance_meters": "number",
+      "walk_time_seconds": "number_optional",
+      "open_now": "boolean_optional",
+      "rating": "number_optional",
+      "price_level": "number_optional",
+      "types_or_categories": "string_array_optional",
+      "address": "string_optional",
+      "photo_url": "string_optional",
+      "source": "string"
+    },
+    "filters_model": {
+      "radius_meters": "number",
+      "open_now": "boolean",
+      "max_price_level": "number_or_null",
+      "keyword": "string_or_null"
+    },
+    "state_model": {
+      "mood": "chill|party|focus|null",
+      "location_mode": "geo|station|null",
+      "coords": "{lat:number,lng:number}|null",
+      "filters": "FiltersModel",
+      "results": "PlaceModel[]",
+      "saved_place_ids": "string[]"
+    }
+  },
+  "failure_states": {
+    "permission_denied": {
+      "message": "位置情報が使えないため、駅名で探せます。",
+      "primary_action": "駅名で探す",
+      "secondary_action": "再度許可を試す"
+    },
+    "no_results": {
+      "message": "近くで条件に合う候補が見つかりませんでした。",
+      "actions": [
+        { "label": "徒歩20分に広げる", "type": "relax_radius" },
+        { "label": "営業中フィルタを外す", "type": "toggle_open_now_off" },
+        { "label": "駅名で探す", "type": "go_station_search" }
+      ]
+    },
+    "network_error": {
+      "message": "通信に失敗しました。",
+      "actions": [
+        { "label": "再試行", "type": "retry" },
+        { "label": "駅名で探す", "type": "go_station_search" }
+      ]
+    }
+  },
+  "implementation_plan": {
+    "phase_1_must_have": [
+      {
+        "ticket_id": "A",
+        "title": "Delay geolocation permission until after mood selection",
+        "tasks": [
+          "Remove geolocation call from initial render on Home.",
+          "Add Permission Gate screen and route.",
+          "Implement station fallback path."
+        ],
+        "acceptance": [
+          "No permission dialog on first load.",
+          "Permission dialog appears only after mood selection."
+        ]
+      },
+      {
+        "ticket_id": "B",
+        "title": "Results screen: 3-card decision UI + primary chips",
+        "tasks": [
+          "Render 3 cards first (no map-first).",
+          "Add chips: radius + open_now (price optional).",
+          "Implement card tap -> detail and route start."
+        ],
+        "acceptance": [
+          "3 cards show immediately after results fetch.",
+          "Chips change results."
+        ]
+      },
+      {
+        "ticket_id": "C",
+        "title": "Station Search fallback",
+        "tasks": [
+          "Input + submit station/area name.",
+          "Resolve to coords (or use a geocoding provider).",
+          "Fetch results centered on coords."
+        ],
+        "acceptance": [
+          "Permission-denied users can still see results."
+        ]
+      }
+    ],
+    "phase_2_should_have": [
+      {
+        "ticket_id": "D",
+        "title": "Keyword search as optional fallback (Results bottom only)",
+        "tasks": [
+          "Add de-emphasized keyword search field at bottom of Results.",
+          "Apply keyword to fetch/filter."
+        ],
+        "acceptance": [
+          "No search bar on Home.",
+          "Keyword search exists only on Results bottom."
+        ]
+      },
+      {
+        "ticket_id": "E",
+        "title": "Save/History (localStorage MVP)",
+        "tasks": [
+          "Add '行きたい' toggle on card + detail.",
+          "Persist IDs in localStorage.",
+          "Add simple saved list view (optional)."
+        ],
+        "acceptance": [
+          "Saved items persist after reload."
+        ]
+      }
+    ],
+    "phase_3_nice_to_have": [
+      {
+        "ticket_id": "F",
+        "title": "Shareable discovery card",
+        "tasks": [
+          "Generate a simple share card image/OG preview.",
+          "Implement share actions."
+        ]
+      },
+      {
+        "ticket_id": "G",
+        "title": "Map view as optional (collapsed by default)",
+        "tasks": [
+          "Add map toggle and pins from current results."
+        ]
+      }
+    ]
+  },
+  "instrumentation": {
+    "events": [
+      { "name": "mood_selected", "props": ["mood"] },
+      { "name": "permission_shown", "props": ["mood"] },
+      { "name": "permission_allowed", "props": ["mood"] },
+      { "name": "permission_denied", "props": ["mood"] },
+      { "name": "station_search_used", "props": ["query_length"] },
+      { "name": "results_shown", "props": ["count", "mood", "radius_meters", "open_now", "max_price_level"] },
+      { "name": "filter_toggled", "props": ["filter_name", "value"] },
+      { "name": "place_opened", "props": ["place_id"] },
+      { "name": "route_started", "props": ["place_id"] },
+      { "name": "saved_toggled", "props": ["place_id", "saved"] },
+      { "name": "keyword_search_used", "props": ["query_length"] }
+    ],
+    "notes": [
+      "Even basic console logging is acceptable in MVP; later swap to analytics provider.",
+      "Use these events to validate whether keyword search is actually used; only promote it if adoption is high."
+    ]
+  },
+  "acceptance_tests": [
+    {
+      "id": "AT_01",
+      "scenario": "First-time visitor",
+      "steps": ["Open app", "Observe no permission prompt", "Select mood", "See permission gate", "Allow", "See results cards"],
+      "pass_conditions": ["No permission prompt at app open", "3 cards visible on results"]
+    },
+    {
+      "id": "AT_02",
+      "scenario": "Permission denied path",
+      "steps": ["Open app", "Select mood", "Deny permission", "Choose station search", "Enter station", "See results"],
+      "pass_conditions": ["User reaches results without geolocation"]
+    },
+    {
+      "id": "AT_03",
+      "scenario": "Filter chips affect results",
+      "steps": ["Reach results", "Toggle '営業中'", "Change radius"],
+      "pass_conditions": ["Result list changes and results_shown event updates"]
+    },
+    {
+      "id": "AT_04",
+      "scenario": "Keyword search is optional and not primary",
+      "steps": ["Open app", "Verify no search UI on Home", "Reach results", "Find keyword search at bottom"],
+      "pass_conditions": ["Search appears only on Results bottom"]
+    }
+  ],
+  "copy_lock": {
+    "home_subheadline": "気分を選ぶだけ。近くの「ちょうどいい場所」を3つ出す。",
+    "permission_headline": "近くのスポットを出すために位置情報を使います",
+    "permission_primary_cta": "位置情報を許可して探す",
+    "permission_secondary_cta": "駅名で探す",
+    "results_keyword_search_label": "店名・ジャンルで探す（任意）"
+  },
+  "open_questions_for_engineering": [
+    "What is the data source for places (Google Places, Yelp, custom DB)?",
+    "Do we have access to open_now/price_level reliably? If not, simplify chips to radius + open_now only.",
+    "What geocoding approach will be used for station search (e.g., Google Geocoding API)?"
+  ]
+}
