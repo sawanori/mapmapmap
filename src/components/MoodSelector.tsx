@@ -5,7 +5,6 @@ import { MOOD_LABELS } from '@/types/vibe';
 
 interface MoodSelectorProps {
   onSelect: (mood: Mood) => void;
-  disabled?: boolean;
 }
 
 const MOOD_ICONS: Record<Mood, string> = {
@@ -14,14 +13,20 @@ const MOOD_ICONS: Record<Mood, string> = {
   focus: '📖',
 };
 
+const MOOD_EXAMPLES: Record<Mood, string> = {
+  chill: 'カフェ・公園・静かなバー',
+  party: 'ライブバー・クラブ・居酒屋',
+  focus: 'ワークスペース・図書館・書店',
+};
+
 const MOOD_ORDER: Mood[] = ['chill', 'party', 'focus'];
 
-export default function MoodSelector({ onSelect, disabled = false }: MoodSelectorProps) {
+export default function MoodSelector({ onSelect }: MoodSelectorProps) {
   return (
     <div className="flex flex-col items-center justify-center gap-8 px-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900">今の気分は？</h1>
-        <p className="text-sm text-gray-500 mt-2">気分に合ったスポットを見つけよう</p>
+        <p className="text-sm text-gray-500 mt-2">気分を選ぶだけ。近くの&quot;ちょうどいい場所&quot;を見つける。</p>
       </div>
 
       <div
@@ -33,20 +38,21 @@ export default function MoodSelector({ onSelect, disabled = false }: MoodSelecto
           <button
             key={mood}
             onClick={() => onSelect(mood)}
-            disabled={disabled}
             aria-label={`${MOOD_LABELS[mood].ja}モードを選択`}
             className="flex items-center gap-4 px-6 py-4 bg-white rounded-2xl shadow-md
                        border border-gray-100 hover:border-blue-300 hover:shadow-lg
-                       active:scale-[0.98] transition-all
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+                       active:scale-[0.98] transition-all"
           >
             <span className="text-3xl" aria-hidden="true">{MOOD_ICONS[mood]}</span>
             <div className="text-left">
               <span className="block text-lg font-semibold text-gray-900">
                 {MOOD_LABELS[mood].ja}
               </span>
-              <span className="block text-xs text-gray-400">
+              <span className="block text-[10px] uppercase tracking-wider text-gray-400">
                 {MOOD_LABELS[mood].en}
+              </span>
+              <span className="block text-xs text-gray-400 mt-0.5">
+                {MOOD_EXAMPLES[mood]}
               </span>
             </div>
           </button>

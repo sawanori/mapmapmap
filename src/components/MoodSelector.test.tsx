@@ -26,6 +26,20 @@ describe('MoodSelector', () => {
     expect(screen.getByText('今の気分は？')).toBeInTheDocument();
   });
 
+  it('should render updated value copy', () => {
+    render(<MoodSelector onSelect={vi.fn()} />);
+
+    expect(screen.getByText(/気分を選ぶだけ/)).toBeInTheDocument();
+  });
+
+  it('should render mood examples for each mood', () => {
+    render(<MoodSelector onSelect={vi.fn()} />);
+
+    expect(screen.getByText('カフェ・公園・静かなバー')).toBeInTheDocument();
+    expect(screen.getByText('ライブバー・クラブ・居酒屋')).toBeInTheDocument();
+    expect(screen.getByText('ワークスペース・図書館・書店')).toBeInTheDocument();
+  });
+
   it('should call onSelect with correct mood when clicked', async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
@@ -53,23 +67,5 @@ describe('MoodSelector', () => {
     expect(screen.getByLabelText('まったりモードを選択')).toBeInTheDocument();
     expect(screen.getByLabelText('ワイワイモードを選択')).toBeInTheDocument();
     expect(screen.getByLabelText('集中モードを選択')).toBeInTheDocument();
-  });
-
-  it('should disable all buttons when disabled prop is true', () => {
-    render(<MoodSelector onSelect={vi.fn()} disabled />);
-
-    const buttons = screen.getAllByRole('button');
-    buttons.forEach((btn) => {
-      expect(btn).toBeDisabled();
-    });
-  });
-
-  it('should not call onSelect when disabled', async () => {
-    const user = userEvent.setup();
-    const onSelect = vi.fn();
-    render(<MoodSelector onSelect={onSelect} disabled />);
-
-    await user.click(screen.getByText('まったり'));
-    expect(onSelect).not.toHaveBeenCalled();
   });
 });

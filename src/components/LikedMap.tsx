@@ -9,6 +9,7 @@ interface LikedMapProps {
   places: VibePlace[];
   userLat?: number;
   userLng?: number;
+  showUserMarker?: boolean;
   onBack: () => void;
 }
 
@@ -17,7 +18,7 @@ function formatDistance(km: number): string {
   return `${km.toFixed(1)}km`;
 }
 
-export default function LikedMap({ places, userLat, userLng, onBack }: LikedMapProps) {
+export default function LikedMap({ places, userLat, userLng, showUserMarker = true, onBack }: LikedMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapError, setMapError] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
@@ -106,7 +107,7 @@ export default function LikedMap({ places, userLat, userLng, onBack }: LikedMapP
         style={{ width: '100%', height: '100%' }}
       >
         {/* User location marker */}
-        {userLat != null && userLng != null && (
+        {showUserMarker && userLat != null && userLng != null && (
           <Marker latitude={userLat} longitude={userLng} anchor="center">
             <div className="relative flex items-center justify-center">
               <div className="absolute w-8 h-8 rounded-full bg-blue-400 opacity-30 animate-ping" />

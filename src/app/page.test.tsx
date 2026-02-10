@@ -64,6 +64,12 @@ function makeMockVibePlace(id: string, name: string): VibePlace {
   };
 }
 
+/** Helper: select a mood then go through the LocationPrompt by clicking skip */
+async function selectMoodAndLocate(user: ReturnType<typeof userEvent.setup>, moodLabel: string) {
+  await user.click(screen.getByText(moodLabel));
+  await user.click(screen.getByText('みなとみらいで探す'));
+}
+
 describe('Home page - Vibe flow', () => {
   let originalGeolocation: Geolocation;
 
@@ -105,14 +111,29 @@ describe('Home page - Vibe flow', () => {
     expect(screen.getByText('MAPMAPMAP!!!')).toBeInTheDocument();
   });
 
-  it('should show loading state after mood selection', async () => {
+  it('should NOT call geolocation on mount', () => {
+    render(<Home />);
+    expect(navigator.geolocation.watchPosition).not.toHaveBeenCalled();
+    expect(navigator.geolocation.getCurrentPosition).not.toHaveBeenCalled();
+  });
+
+  it('should show LocationPrompt after mood selection (first time)', async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.click(screen.getByText('まったり'));
+    expect(screen.getByText('現在地を使ってもいい？')).toBeInTheDocument();
+    expect(screen.getByText('みなとみらいで探す')).toBeInTheDocument();
+  });
+
+  it('should show loading state after mood selection and location skip', async () => {
     const user = userEvent.setup();
     vi.mocked(searchByMood).mockImplementation(
       () => new Promise(() => {}), // never resolves - keeps loading state
     );
 
     render(<Home />);
-    await user.click(screen.getByText('まったり'));
+    await selectMoodAndLocate(user, 'まったり');
 
     expect(screen.getByText('スポットを探しています...')).toBeInTheDocument();
   });
@@ -129,7 +150,7 @@ describe('Home page - Vibe flow', () => {
     });
 
     render(<Home />);
-    await user.click(screen.getByText('まったり'));
+    await selectMoodAndLocate(user, 'まったり');
 
     await waitFor(() => {
       expect(screen.getByText('カフェA')).toBeInTheDocument();
@@ -145,7 +166,7 @@ describe('Home page - Vibe flow', () => {
     });
 
     render(<Home />);
-    await user.click(screen.getByText('まったり'));
+    await selectMoodAndLocate(user, 'まったり');
 
     await waitFor(() => {
       expect(screen.getByText('近くにスポットが見つかりませんでした')).toBeInTheDocument();
@@ -160,7 +181,7 @@ describe('Home page - Vibe flow', () => {
     });
 
     render(<Home />);
-    await user.click(screen.getByText('まったり'));
+    await selectMoodAndLocate(user, 'まったり');
 
     await waitFor(() => {
       expect(screen.getByLabelText('ムードを変更')).toBeInTheDocument();
@@ -175,7 +196,7 @@ describe('Home page - Vibe flow', () => {
     });
 
     render(<Home />);
-    await user.click(screen.getByText('まったり'));
+    await selectMoodAndLocate(user, 'まったり');
 
     await waitFor(() => {
       expect(screen.getByText('カフェA')).toBeInTheDocument();
@@ -197,8 +218,8 @@ describe('Home page - Vibe flow', () => {
     expect(screen.getByText('今の気分は？')).toBeInTheDocument();
   });
 
-  it('should call watchPosition on mount', () => {
+  it('should show idle header text before geolocation', () => {
     render(<Home />);
-    expect(navigator.geolocation.watchPosition).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('気分に合ったスポットを見つけよう')).toBeInTheDocument();
   });
 });

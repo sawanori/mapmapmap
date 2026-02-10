@@ -154,4 +154,20 @@ describe('LikedMap', () => {
     expect(screen.getByText('★ 4.0')).toBeInTheDocument();
     expect(screen.getByText('1.0km')).toBeInTheDocument();
   });
+
+  it('should render user marker when showUserMarker is true', () => {
+    render(
+      <LikedMap places={[]} userLat={35.45} userLng={139.63} showUserMarker={true} onBack={vi.fn()} />,
+    );
+    // User marker + map = 1 marker for user location
+    const markers = screen.getAllByTestId('marker');
+    expect(markers).toHaveLength(1);
+  });
+
+  it('should not render user marker when showUserMarker is false', () => {
+    render(
+      <LikedMap places={[]} userLat={35.45} userLng={139.63} showUserMarker={false} onBack={vi.fn()} />,
+    );
+    expect(screen.queryByTestId('marker')).not.toBeInTheDocument();
+  });
 });

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/lib/constants';
 import { useVibeStore } from '@/store/vibe-store';
 import MoodSelector from '@/components/MoodSelector';
+import LocationPrompt from '@/components/LocationPrompt';
 import CardStack from '@/components/CardStack';
 import CardsExhausted from '@/components/CardsExhausted';
 import type { Mood } from '@/types/vibe';
@@ -12,15 +13,15 @@ import type { VibePlace } from '@/types/vibe';
 
 const LikedMap = dynamic(() => import('@/components/LikedMap'), { ssr: false });
 
-type ViewMode = 'mood' | 'cards' | 'exhausted' | 'likedMap';
+type ViewMode = 'mood' | 'locating' | 'cards' | 'exhausted' | 'likedMap';
 
-type GeoStatus = 'loading' | 'granted' | 'denied' | 'unavailable';
+type GeoStatus = 'idle' | 'loading' | 'granted' | 'denied' | 'unavailable';
 
 export default function Home() {
   const [userLat, setUserLat] = useState(DEFAULT_LAT);
   const [userLng, setUserLng] = useState(DEFAULT_LNG);
   const [viewMode, setViewMode] = useState<ViewMode>('mood');
-  const [geoStatus, setGeoStatus] = useState<GeoStatus>('loading');
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle');
 
   const {
     currentMood,
@@ -37,35 +38,6 @@ export default function Home() {
     reset,
   } = useVibeStore();
 
-  // Geolocation
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setGeoStatus('unavailable');
-      return;
-    }
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setUserLat(position.coords.latitude);
-        setUserLng(position.coords.longitude);
-        setGeoStatus('granted');
-      },
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          setGeoStatus('denied');
-        } else {
-          setGeoStatus('unavailable');
-        }
-        navigator.geolocation.clearWatch(watchId);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
-    );
-
-    return () => {
-      navigator.geolocation?.clearWatch(watchId);
-    };
-  }, []);
-
   // Transition to cards/exhausted based on store state
   useEffect(() => {
     if (isExhausted && viewMode === 'cards') {
@@ -76,10 +48,29 @@ export default function Home() {
   const handleMoodSelect = useCallback(
     async (mood: Mood) => {
       setMood(mood);
-      setViewMode('cards');
-      await loadCards(userLat, userLng);
+      if (geoStatus === 'granted' || geoStatus === 'denied' || geoStatus === 'unavailable') {
+        // Already resolved (granted, denied, or unavailable) → skip LocationPrompt
+        useVibeStore.setState({ isLoading: true });
+        setViewMode('cards');
+        await loadCards(userLat, userLng);
+      } else {
+        // idle → show LocationPrompt
+        setViewMode('locating');
+      }
     },
-    [setMood, loadCards, userLat, userLng],
+    [setMood, geoStatus, loadCards, userLat, userLng],
+  );
+
+  const handleLocationResolved = useCallback(
+    async (lat: number, lng: number, status: GeoStatus) => {
+      setUserLat(lat);
+      setUserLng(lng);
+      setGeoStatus(status);
+      useVibeStore.setState({ isLoading: true });
+      setViewMode('cards');
+      await loadCards(lat, lng);
+    },
+    [loadCards],
   );
 
   const handleChangeMood = useCallback(() => {
@@ -126,6 +117,7 @@ export default function Home() {
           places={likedPlaces}
           userLat={userLat}
           userLng={userLng}
+          showUserMarker={geoStatus === 'granted'}
           onBack={handleBackFromMap}
         />
       )}
@@ -140,6 +132,7 @@ export default function Home() {
                 MAPMAPMAP!!!
               </h1>
               <p className="text-xs text-gray-500 -mt-0.5">
+                {geoStatus === 'idle' && '気分に合ったスポットを見つけよう'}
                 {geoStatus === 'loading' && '📍 位置情報を取得中...'}
                 {geoStatus === 'granted' && `📍 ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`}
                 {geoStatus === 'denied' && '📍 デフォルト位置（みなとみらい）'}
@@ -170,7 +163,16 @@ export default function Home() {
 
           {/* Mood Selection */}
           {viewMode === 'mood' && (
-            <MoodSelector onSelect={handleMoodSelect} disabled={isLoading} />
+            <MoodSelector onSelect={handleMoodSelect} />
+          )}
+
+          {/* Location Prompt */}
+          {viewMode === 'locating' && (
+            <LocationPrompt
+              onResolved={handleLocationResolved}
+              defaultLat={DEFAULT_LAT}
+              defaultLng={DEFAULT_LNG}
+            />
           )}
 
           {/* Loading */}
@@ -222,7 +224,7 @@ export default function Home() {
       )}
 
       {/* Error toast */}
-      {errorMessage && viewMode !== 'cards' && (
+      {errorMessage && (viewMode === 'mood' || viewMode === 'exhausted') && (
         <div
           role="alert"
           className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow text-sm max-w-sm text-center"
