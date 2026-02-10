@@ -6,7 +6,7 @@ import './globals.css';
 const geist = Geist({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Context-Map -- 雰囲気でスポットを探す',
+  title: 'MAPMAPMAP!!! -- 雰囲気でスポットを探す',
   description:
     '気分にぴったりのスポットを発見。地図上でセマンティック検索。',
 };

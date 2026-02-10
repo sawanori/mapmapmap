@@ -14,8 +14,8 @@ const { metadata, viewport } = await import('./layout');
 
 describe('RootLayout exports', () => {
   describe('metadata', () => {
-    it('has a title that includes "Context-Map"', () => {
-      expect(metadata.title).toContain('Context-Map');
+    it('has a title that includes "MAPMAPMAP!!!"', () => {
+      expect(metadata.title).toContain('MAPMAPMAP!!!');
     });
 
     it('has a description that mentions vibe-based search', () => {
