@@ -45,8 +45,8 @@ describe('MapView pin rendering contract', () => {
     expect(typeof mod.default).toBe('function');
   });
 
-  it('PIN_COLOR is gunjo-blue (#1a1a6e)', () => {
-    expect(PIN_COLOR).toBe('#1a1a6e');
+  it('PIN_COLOR is blue-800 (#1e40af)', () => {
+    expect(PIN_COLOR).toBe('#1e40af');
   });
 
   it('MapView accepts searchResults prop of type SearchResult[]', () => {

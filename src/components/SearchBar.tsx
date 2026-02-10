@@ -89,7 +89,7 @@ export default function SearchBar({ userLocation, onResults, onError }: SearchBa
           <button
             type="submit"
             disabled={isPending || !query.trim()}
-            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-gray-900 text-white disabled:opacity-40 transition-opacity"
+            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-blue-800 text-white disabled:opacity-40 transition-opacity"
             aria-label="検索"
           >
             {isPending ? (

@@ -24,7 +24,7 @@ export default function SortToggle({ sortBy, onSortChange }: SortToggleProps) {
   return (
     <button
       onClick={handleClick}
-      className="fixed top-4 left-4 z-50 px-3 h-10 rounded-lg bg-white shadow-md text-sm font-bold transition-colors focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="fixed top-4 left-4 z-50 px-3 h-10 rounded-lg bg-white shadow-md text-sm font-bold text-blue-800 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500"
       aria-label={`ソート切り替え: 現在 ${label}`}
     >
       {label}

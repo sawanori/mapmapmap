@@ -17,7 +17,8 @@ export const EMBEDDING_TIMEOUT_MS = 5000;
 
 // Mapbox
 export const MAP_STYLE = 'mapbox://styles/mapbox/light-v11';
-export const PIN_COLOR = '#1a1a6e';
+export const PIN_COLOR = '#1e40af'; // blue-800
+export const THEME_COLOR = '#1e40af'; // main brand blue
 
 // Google Places API
 export const GOOGLE_PLACES_TYPE_MAP: Record<string, string> = {

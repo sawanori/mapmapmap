@@ -100,7 +100,7 @@ export default function SpotCard({ spot, onClose }: SpotCardProps) {
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+          <div className="w-10 h-1 bg-blue-200 rounded-full" />
         </div>
 
         <div className="px-6 pb-6 space-y-4">
@@ -108,7 +108,7 @@ export default function SpotCard({ spot, onClose }: SpotCardProps) {
           <div>
             <h2 className="text-xl font-bold text-gray-900">{spot.name}</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+              <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-800 text-xs font-medium rounded-full">
                 {spot.category}
               </span>
               <span className="text-sm text-gray-400">
@@ -157,7 +157,7 @@ export default function SpotCard({ spot, onClose }: SpotCardProps) {
 
           {/* Magazine Context */}
           {spot.magazineContext && (
-            <div className="flex items-start gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+            <div className="flex items-start gap-2 text-xs text-blue-800/70 bg-blue-50 px-3 py-2 rounded-lg">
               <span className="shrink-0 font-medium">掲載情報:</span>
               <span>{spot.magazineContext}</span>
             </div>
@@ -172,8 +172,8 @@ export default function SpotCard({ spot, onClose }: SpotCardProps) {
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full py-3 bg-gray-900 text-white rounded-xl font-medium text-sm
-                       text-center hover:bg-gray-800 active:bg-gray-700 transition-colors"
+            className="block w-full py-3 bg-blue-800 text-white rounded-xl font-medium text-sm
+                       text-center hover:bg-blue-700 active:bg-blue-600 transition-colors"
             aria-label={`${spot.name}をGoogle Mapsで開く`}
           >
             Google Mapsで開く

@@ -168,7 +168,7 @@ export default function MapView({
             }}
           >
             <div
-              className="w-4 h-4 rounded-full border-2 border-white shadow-md cursor-pointer transition-transform hover:scale-125"
+              className="w-4 h-4 rounded-full border-2 border-blue-100 shadow-md cursor-pointer transition-transform hover:scale-125"
               style={{ backgroundColor: PIN_COLOR }}
             />
           </Marker>
@@ -179,7 +179,7 @@ export default function MapView({
       <button
         onClick={toggle3D}
         className="fixed top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-lg bg-white shadow-md text-sm font-bold transition-colors"
-        style={{ color: is3D ? '#3b82f6' : '#6b7280' }}
+        style={{ color: is3D ? '#1e40af' : '#6b7280' }}
         aria-label={is3D ? '2D表示に切替' : '3D表示に切替'}
       >
         3D
