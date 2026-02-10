@@ -11,15 +11,19 @@
     "seed:places": "npx tsx --env-file=.env.local seed-places.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.40.0",
     "@libsql/client": "^0.14.0",
+    "@vercel/og": "^0.8.6",
     "drizzle-orm": "^0.38.0",
     "mapbox-gl": "^3.9.0",
+    "motion": "^12.34.0",
     "next": "^15.1.0",
     "openai": "^4.77.0",
     "playwright": "^1.58.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-map-gl": "^7.1.0"
+    "react-map-gl": "^7.1.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

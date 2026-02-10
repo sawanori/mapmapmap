@@ -1,47 +1,54 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/lib/constants';
-import SearchBar from '@/components/SearchBar';
-import SpotCard from '@/components/SpotCard';
-import SortToggle from '@/components/SortToggle';
-import type { SearchResult, UserLocation, SortBy } from '@/types/spot';
+import { useVibeStore } from '@/store/vibe-store';
+import MoodSelector from '@/components/MoodSelector';
+import CardStack from '@/components/CardStack';
+import CardsExhausted from '@/components/CardsExhausted';
+import type { Mood } from '@/types/vibe';
+import type { VibePlace } from '@/types/vibe';
 
-const ERROR_TOAST_DURATION_MS = 5000;
+const LikedMap = dynamic(() => import('@/components/LikedMap'), { ssr: false });
 
-const MapView = dynamic(() => import('@/components/Map'), { ssr: false });
+type ViewMode = 'mood' | 'cards' | 'exhausted' | 'likedMap';
 
 export default function Home() {
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [selectedSpot, setSelectedSpot] = useState<SearchResult | null>(null);
-  const [noResults, setNoResults] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [userLocation, setUserLocation] = useState<UserLocation>({
-    lat: DEFAULT_LAT,
-    lng: DEFAULT_LNG,
-    isDefault: true,
-  });
-  const [sortBy, setSortBy] = useState<SortBy>('relevance');
-  const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [userLat, setUserLat] = useState(DEFAULT_LAT);
+  const [userLng, setUserLng] = useState(DEFAULT_LNG);
+  const [viewMode, setViewMode] = useState<ViewMode>('mood');
 
+  const {
+    currentMood,
+    cards,
+    currentIndex,
+    likedPlaces,
+    isLoading,
+    isExhausted,
+    errorMessage,
+    setMood,
+    loadCards,
+    like,
+    pass,
+    reset,
+  } = useVibeStore();
+
+  // Geolocation
   useEffect(() => {
     if (!navigator.geolocation) return;
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          isDefault: false,
-        });
+        setUserLat(position.coords.latitude);
+        setUserLng(position.coords.longitude);
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
           navigator.geolocation.clearWatch(watchId);
         }
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
     );
 
     return () => {
@@ -49,93 +56,158 @@ export default function Home() {
     };
   }, []);
 
-  // Auto-dismiss error toast
+  // Transition to cards/exhausted based on store state
   useEffect(() => {
-    if (errorMessage) {
-      // Clear any existing timer
-      if (errorTimerRef.current) {
-        clearTimeout(errorTimerRef.current);
-      }
-      errorTimerRef.current = setTimeout(() => {
-        setErrorMessage(null);
-        errorTimerRef.current = null;
-      }, ERROR_TOAST_DURATION_MS);
+    if (isExhausted && viewMode === 'cards') {
+      setViewMode('exhausted');
     }
+  }, [isExhausted, viewMode]);
 
-    return () => {
-      if (errorTimerRef.current) {
-        clearTimeout(errorTimerRef.current);
-        errorTimerRef.current = null;
-      }
-    };
-  }, [errorMessage]);
+  const handleMoodSelect = useCallback(
+    async (mood: Mood) => {
+      setMood(mood);
+      setViewMode('cards');
+      await loadCards(userLat, userLng);
+    },
+    [setMood, loadCards, userLat, userLng],
+  );
 
-  const handleResults = useCallback((results: SearchResult[]) => {
-    setSearchResults(results);
-    setSelectedSpot(null);
-    setErrorMessage(null);
-    setNoResults(results.length === 0);
+  const handleChangeMood = useCallback(() => {
+    reset();
+    setViewMode('mood');
+  }, [reset]);
+
+  const handleExpandRadius = useCallback(async () => {
+    setViewMode('cards');
+    await loadCards(userLat, userLng);
+  }, [loadCards, userLat, userLng]);
+
+  const handleShowLikedMap = useCallback(() => {
+    setViewMode('likedMap');
   }, []);
 
-  const handleError = useCallback((message: string) => {
-    setErrorMessage(message);
-  }, []);
-
-  const sortedResults = useMemo(() => {
-    if (searchResults.length === 0) return [];
-    const sorted = [...searchResults];
-    if (sortBy === 'distance') {
-      sorted.sort((a, b) => a.distance - b.distance);
-    } else if (sortBy === 'rating') {
-      sorted.sort((a, b) => {
-        if (a.rating == null && b.rating == null) return 0;
-        if (a.rating == null) return 1;
-        if (b.rating == null) return -1;
-        return b.rating - a.rating;
-      });
+  const handleBackFromMap = useCallback(() => {
+    if (isExhausted) {
+      setViewMode('exhausted');
+    } else {
+      setViewMode('cards');
     }
-    // 'relevance' = server order (vectorDistance asc), no re-sort needed
-    return sorted;
-  }, [searchResults, sortBy]);
+  }, [isExhausted]);
 
-  const mapUserLocation = useMemo(
-    () => userLocation.isDefault ? undefined : { lat: userLocation.lat, lng: userLocation.lng },
-    [userLocation.lat, userLocation.lng, userLocation.isDefault]
+  const handleLike = useCallback(
+    (place: VibePlace) => {
+      like(place);
+    },
+    [like],
+  );
+
+  const handlePass = useCallback(
+    (placeId: string) => {
+      pass(placeId);
+    },
+    [pass],
   );
 
   return (
-    <main className="relative w-screen h-dvh overflow-hidden">
-      <MapView
-        initialCenter={{ lat: DEFAULT_LAT, lng: DEFAULT_LNG }}
-        userLocation={mapUserLocation}
-        searchResults={sortedResults}
-        selectedSpot={selectedSpot}
-        onSpotSelect={setSelectedSpot}
-      />
-      <SearchBar
-        userLocation={{ lat: userLocation.lat, lng: userLocation.lng }}
-        onResults={handleResults}
-        onError={handleError}
-      />
-      {sortedResults.length > 0 && (
-        <SortToggle sortBy={sortBy} onSortChange={setSortBy} />
+    <main className="relative w-screen h-dvh overflow-hidden bg-gray-50">
+      {/* Liked Map (fullscreen) */}
+      {viewMode === 'likedMap' && (
+        <LikedMap
+          places={likedPlaces}
+          onBack={handleBackFromMap}
+        />
       )}
-      <SpotCard
-        spot={selectedSpot}
-        onClose={() => setSelectedSpot(null)}
-      />
-      {errorMessage && (
-        <div
-          role="alert"
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow text-sm max-w-sm text-center animate-fade-in"
-        >
-          {errorMessage}
+
+      {/* Main content area (centered) */}
+      {viewMode !== 'likedMap' && (
+        <div className="flex flex-col items-center justify-center h-full px-4 py-8">
+          {/* Header */}
+          <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm">
+            <h1 className="text-lg font-bold text-gray-900">
+              VIBE MAP
+            </h1>
+            <div className="flex items-center gap-3">
+              {currentMood && viewMode === 'cards' && likedPlaces.length > 0 && (
+                <button
+                  onClick={handleShowLikedMap}
+                  className="px-3 py-1.5 text-xs font-medium text-blue-800 bg-blue-50 rounded-full"
+                  aria-label={`お気に入り${likedPlaces.length}件を地図で見る`}
+                >
+                  ♥ {likedPlaces.length}
+                </button>
+              )}
+              {currentMood && (
+                <button
+                  onClick={handleChangeMood}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white rounded-full border border-gray-200"
+                  aria-label="ムードを変更"
+                >
+                  気分を変える
+                </button>
+              )}
+            </div>
+          </header>
+
+          {/* Mood Selection */}
+          {viewMode === 'mood' && (
+            <MoodSelector onSelect={handleMoodSelect} disabled={isLoading} />
+          )}
+
+          {/* Loading */}
+          {viewMode === 'cards' && isLoading && (
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-800 rounded-full animate-spin" />
+              <p className="text-sm text-gray-500">スポットを探しています...</p>
+            </div>
+          )}
+
+          {/* Card Stack */}
+          {viewMode === 'cards' && !isLoading && cards.length > 0 && (
+            <div className="w-full max-w-sm mt-14">
+              <CardStack
+                cards={cards}
+                currentIndex={currentIndex}
+                mood={currentMood ?? undefined}
+                onLike={handleLike}
+                onPass={handlePass}
+              />
+            </div>
+          )}
+
+          {/* No results */}
+          {viewMode === 'cards' && !isLoading && cards.length === 0 && !isExhausted && (
+            <div className="text-center">
+              <p className="text-gray-600 text-sm">
+                {errorMessage ?? '近くにスポットが見つかりませんでした'}
+              </p>
+              <button
+                onClick={handleChangeMood}
+                className="mt-4 px-4 py-2 text-sm text-blue-800 bg-blue-50 rounded-xl"
+              >
+                別の気分で探す
+              </button>
+            </div>
+          )}
+
+          {/* Cards Exhausted */}
+          {viewMode === 'exhausted' && (
+            <CardsExhausted
+              likedCount={likedPlaces.length}
+              onExpandRadius={handleExpandRadius}
+              onChangeMood={handleChangeMood}
+              onShowLikedMap={handleShowLikedMap}
+            />
+          )}
         </div>
       )}
-      {noResults && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-lg text-center">
-          <p className="text-gray-600 text-sm">近くにスポットが見つかりませんでした</p>
-          <p className="text-gray-400 text-xs mt-1">別のキーワードや場所で試してみてください</p>
+
+      {/* Error toast */}
+      {errorMessage && viewMode !== 'cards' && (
+        <div
+          role="alert"
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow text-sm max-w-sm text-center"
+        >
+          {errorMessage}
         </div>
       )}
     </main>

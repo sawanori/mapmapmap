@@ -1,0 +1,106 @@
+{
+  "project_spec_version": "2.1.0",
+  "changelog": [
+    "2.1.0 (2026-02-10): レビュー指摘修正 - Next.js 15, Gemini 2.5 Flash, motion パッケージ, Mood/MoodScore 統一, catchphrase 30文字, 地図ライブラリ明確化"
+  ],
+  "app_identity": {
+    "name": "VIBE MAP (Project Code: Mood-First)",
+    "concept": "地図検索の再定義。座標ではなく『感情』で場所を探す。",
+    "target_user_experience": "Tinder for Places. 検索窓を排除し、直感的なスワイプで『ここ好き』を見つける。"
+  },
+  "tech_stack_requirements": {
+    "framework": "Next.js 15 (App Router) + React 19",
+    "styling": "Tailwind CSS + motion (旧 Framer Motion, React 19 対応版。import は 'motion/react' から)",
+    "maps": "Mapbox GL JS (既存実装を活用。基本は非表示、詳細時 & Liked Map でのみ展開)",
+    "data_source": "Google Places API (New) - Text Search (New) & Place Details (places.reviews, places.photos 含む)",
+    "ai_engine": "Gemini 2.5 Flash (JSON Mode) - 高速かつクリエイティブな出力用",
+    "state_management": "Zustand (ユーザーの『好き/嫌い』スワイプ履歴の管理)"
+  },
+  "data_models": {
+    "type_definition": "Typescript Interfaces",
+    "schemas": [
+      {
+        "name": "VibePlace",
+        "description": "Googleの生データをAIが『意訳』した表示用データ。AI生成フィールドとGoogle Places由来フィールドの複合型。",
+        "fields": {
+          "_comment_ai_generated": "以下は Gemini が生成するフィールド",
+          "id": "string (Google Place ID)",
+          "name": "string",
+          "catchphrase": "string (AI生成: 30文字以内のエモいコピー)",
+          "vibe_tags": "string[] (AI生成: 3つ。例 ['#深夜の読書', '#照明暗め', '#一人時間'])",
+          "hero_image_url": "string (Google Photos から PhotoCurator ロジックで選別)",
+          "mood_score": {
+            "chill": "number (0-100)",
+            "party": "number (0-100)",
+            "focus": "number (0-100)"
+          },
+          "hidden_gems_info": "string (レビューから抽出した『知る人ぞ知る』情報)",
+          "is_rejected": "boolean (チェーン店・ファストフード = true)",
+          "_comment_google_places": "以下は Google Places API から直接取得するフィールド",
+          "lat": "number",
+          "lng": "number",
+          "category": "string",
+          "rating": "number | null",
+          "address": "string | null",
+          "opening_hours": "string[] | null",
+          "_comment_computed": "以下はクライアント側で算出するフィールド",
+          "distance": "number (km, Haversine 公式で算出)"
+        }
+      }
+    ]
+  },
+  "ai_architecture": {
+    "system_prompt_template": {
+      "role": "You are a specialized 'City Curator' editor for a high-end lifestyle magazine.",
+      "task": "Analyze the raw Google Maps data (reviews, photos, attributes) and output a JSON object describing the 'Vibe' of the place.",
+      "constraints": [
+        "Ignore generic praises like 'good food' or 'nice staff'. Focus on ATMOSPHERE.",
+        "Catchphrase must be poetic, emotional, and short (max 30 chars in Japanese).",
+        "If the place is a chain store or fast food, set 'is_rejected' to true.",
+        "Extract 3 hashtags that describe the *situation* to use this place (e.g., #FirstDate, #SoloWork, #DeepTalk).",
+        "mood_score must include 'chill', 'party', 'focus' dimensions (each 0-100)."
+      ],
+      "input_variable": "{raw_google_place_json}",
+      "output_format": "JSON Only (with JSON Schema validation)",
+      "required_input_fields": "places.reviews, places.photos, places.displayName, places.types, places.rating, places.formattedAddress, places.currentOpeningHours"
+    },
+    "filtering_logic": "Server Action 内でチェーン店をプレフィルタ (name matching) し、Gemini API 呼び出し前に除外。Gemini 側でも is_rejected フラグで二重チェック。",
+    "caching_strategy": "Gemini 変換結果を Turso の vibe_places_cache テーブルに保存 (TTL: 7日)。同一 Place ID への再リクエスト時はキャッシュから返却し、API コストを削減。"
+  },
+  "ui_ux_blueprint": {
+    "user_flow": {
+      "step_1_onboarding": "アプリ起動直後、位置情報許可 → 『今の気分は？』の3択ムードボタンのみ表示 (Chill / Party / Focus)。検索窓は置かない。位置情報拒否時はデフォルト地点 (みなとみらい) を使用。",
+      "step_2_discovery": "選んだムードに基づき、周辺の厳選された場所が『カード』としてスタック表示される。",
+      "step_3_interaction": "右スワイプ(Like) → 保存リストへ。左スワイプ(Pass) → 次の提案。タップ → 詳細＆地図展開。",
+      "step_4_map_view": "保存した(Likeした)場所だけがプロットされた『自分だけの地図』が完成する。",
+      "step_5_cards_exhausted": "全カードをスワイプ完了時、『検索範囲を広げる / ムードを変える / Liked Map を見る』の3択を表示。"
+    },
+    "component_spec": {
+      "CardStack": {
+        "description": "画面中央に配置。motion パッケージの AnimatePresence を使用。import from 'motion/react'。",
+        "interaction": "Drag gestures with velocity check (閾値: 100px / 500px/s)。Y軸デッドゾーン設定でスクロール誤判定を防止。",
+        "accessibility": "キーボード操作: → キー = Like, ← キー = Pass, Enter = 詳細。スクリーンリーダー向け aria-live で現在のカード情報を通知。"
+      },
+      "VibeBadge": {
+        "style": "Blur background, thin white border, small text. (Glassmorphism)"
+      },
+      "PhotoCurator": {
+        "logic": "Google Places Photos 配列 (places.photos) から、authorAttributions や photo metadata を元に 'interior' や 'atmosphere' 寄りの写真を優先して背景に設定。food 系写真は優先度を下げる。写真がない場合はカテゴリ別のグラデーション背景をフォールバック。"
+      },
+      "LikePassButtons": {
+        "description": "スワイプが困難なユーザー向けの Like/Pass ボタン。カード下部に常時表示。アクセシビリティ代替手段。"
+      }
+    }
+  },
+  "growth_strategy_features": {
+    "shareability": "『この店、良さそう』ではなく、『私の今の気分(Vibe)』をシェアする機能。選択したムードとLikeしたスポット群をまとめてシェア可能。",
+    "og_image_generation": "Vercel OG Image を使用し、Liked した店の写真と AI コピーを合成した画像を動的に生成し、SNS シェア時のクリック率を高める。"
+  },
+  "implementation_steps": [
+    "Phase 1: Google Places API からデータを取得し、生データを表示するだけのプロトタイプ作成 (Done)",
+    "Phase 2: @google/genai SDK を導入し、生データを System Prompt に通して VibePlace 型に変換するパイプライン構築 + Vibe キャッシュテーブル",
+    "Phase 3: UI を『リスト』から『Tinder 風スワイプ』に完全刷新 (motion + Zustand)",
+    "Phase 4: 『チェーン店除外フィルタ』の精度調整 + Gemini is_rejected 連携",
+    "Phase 5: OG 画像生成 + Vibe シェア機能"
+  ]
+}

@@ -1,57 +1,81 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { act } from '@testing-library/react';
 
-// Track props passed to child components
-const mockMapViewProps = vi.fn();
-const mockSearchBarProps = vi.fn();
+// Mock vibe-actions
+vi.mock('@/app/vibe-actions', () => ({
+  searchByMood: vi.fn(),
+}));
 
-// Mock next/dynamic to render the underlying component synchronously
+// Mock motion/react
+vi.mock('motion/react', () => ({
+  motion: {
+    div: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
+      const safe: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(props)) {
+        if (!['drag', 'dragConstraints', 'dragElastic', 'initial', 'animate', 'exit', 'transition', 'whileDrag', 'onDragEnd'].includes(k)) {
+          safe[k] = v;
+        }
+      }
+      return <div {...safe}>{children}</div>;
+    },
+  },
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock next/dynamic for LikedMap
 vi.mock('next/dynamic', () => ({
   default: () => {
-    const MockMap = (props: Record<string, unknown>) => {
-      mockMapViewProps(props);
-      return <div data-testid="map-view" />;
-    };
-    MockMap.displayName = 'MockMap';
-    return MockMap;
+    const Mock = (props: Record<string, unknown>) => (
+      <div data-testid="liked-map">
+        <button onClick={props.onBack as () => void}>← 戻る</button>
+      </div>
+    );
+    Mock.displayName = 'MockLikedMap';
+    return Mock;
   },
-}));
-
-// Mock SearchBar
-vi.mock('@/components/SearchBar', () => ({
-  default: (props: Record<string, unknown>) => {
-    mockSearchBarProps(props);
-    return <div data-testid="search-bar" />;
-  },
-}));
-
-// Mock actions
-vi.mock('@/app/actions', () => ({
-  searchSpots: vi.fn(),
 }));
 
 import Home from './page';
-import { DEFAULT_LAT, DEFAULT_LNG } from '@/lib/constants';
+import { useVibeStore } from '@/store/vibe-store';
+import { searchByMood } from '@/app/vibe-actions';
+import type { VibePlace } from '@/types/vibe';
 
-describe('Home page geolocation integration', () => {
-  let mockWatchPosition: ReturnType<typeof vi.fn>;
-  let mockClearWatch: ReturnType<typeof vi.fn>;
+function makeMockVibePlace(id: string, name: string): VibePlace {
+  return {
+    id,
+    name,
+    catchphrase: '素敵な空間',
+    vibeTags: ['#tag1', '#tag2', '#tag3'],
+    heroImageUrl: 'https://photo.url/test.jpg',
+    moodScore: { chill: 80, party: 20, focus: 60 },
+    hiddenGemsInfo: 'テラス席',
+    isRejected: false,
+    lat: 35.65,
+    lng: 139.7,
+    category: 'Cafe',
+    rating: 4.2,
+    address: '東京都渋谷区',
+    openingHours: null,
+    distance: 0.5,
+  };
+}
+
+describe('Home page - Vibe flow', () => {
   let originalGeolocation: Geolocation;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockWatchPosition = vi.fn().mockReturnValue(42);
-    mockClearWatch = vi.fn();
-
-    // Store original
+    act(() => {
+      useVibeStore.getState().reset();
+    });
     originalGeolocation = navigator.geolocation;
-
-    // Mock geolocation API
     Object.defineProperty(navigator, 'geolocation', {
       value: {
         getCurrentPosition: vi.fn(),
-        watchPosition: mockWatchPosition,
-        clearWatch: mockClearWatch,
+        watchPosition: vi.fn().mockReturnValue(42),
+        clearWatch: vi.fn(),
       },
       writable: true,
       configurable: true,
@@ -59,7 +83,6 @@ describe('Home page geolocation integration', () => {
   });
 
   afterEach(() => {
-    // Restore original
     Object.defineProperty(navigator, 'geolocation', {
       value: originalGeolocation,
       writable: true,
@@ -67,247 +90,113 @@ describe('Home page geolocation integration', () => {
     });
   });
 
-  it('should initialize with default Tokyo Station coordinates', () => {
+  it('should show MoodSelector on initial load', () => {
     render(<Home />);
-
-    // MapView should be called with default coordinates initially
-    expect(mockMapViewProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        initialCenter: { lat: DEFAULT_LAT, lng: DEFAULT_LNG },
-      })
-    );
+    expect(screen.getByText('今の気分は？')).toBeInTheDocument();
+    expect(screen.getByText('まったり')).toBeInTheDocument();
+    expect(screen.getByText('ワイワイ')).toBeInTheDocument();
+    expect(screen.getByText('集中')).toBeInTheDocument();
   });
 
-  it('should not pass userLocation to MapView when using default location', () => {
+  it('should show VIBE MAP heading', () => {
     render(<Home />);
-
-    expect(mockMapViewProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userLocation: undefined,
-      })
-    );
+    expect(screen.getByText('VIBE MAP')).toBeInTheDocument();
   });
 
-  it('should pass userLocation to SearchBar', () => {
-    render(<Home />);
-
-    expect(mockSearchBarProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userLocation: expect.objectContaining({
-          lat: DEFAULT_LAT,
-          lng: DEFAULT_LNG,
-        }),
-      })
+  it('should show loading state after mood selection', async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchByMood).mockImplementation(
+      () => new Promise(() => {}), // never resolves - keeps loading state
     );
+
+    render(<Home />);
+    await user.click(screen.getByText('まったり'));
+
+    expect(screen.getByText('スポットを探しています...')).toBeInTheDocument();
   });
 
-  it('should call navigator.geolocation.watchPosition on mount', () => {
-    render(<Home />);
-
-    expect(mockWatchPosition).toHaveBeenCalledTimes(1);
-    expect(mockWatchPosition).toHaveBeenCalledWith(
-      expect.any(Function), // success callback
-      expect.any(Function), // error callback
-      expect.objectContaining({
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
-      })
-    );
-  });
-
-  it('should update location on geolocation success and map re-centers', async () => {
-    mockWatchPosition.mockImplementation(
-      (successCallback: PositionCallback) => {
-        successCallback({
-          coords: {
-            latitude: 35.6895,
-            longitude: 139.6917,
-            accuracy: 10,
-            altitude: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          },
-          timestamp: Date.now(),
-        } as GeolocationPosition);
-        return 42;
-      }
-    );
+  it('should show cards after successful load', async () => {
+    const user = userEvent.setup();
+    const places = [
+      makeMockVibePlace('p1', 'カフェA'),
+      makeMockVibePlace('p2', 'カフェB'),
+    ];
+    vi.mocked(searchByMood).mockResolvedValue({
+      success: true,
+      data: places,
+    });
 
     render(<Home />);
+    await user.click(screen.getByText('まったり'));
 
     await waitFor(() => {
-      // After geolocation success, MapView should receive updated userLocation
-      const lastCall = mockMapViewProps.mock.calls[mockMapViewProps.mock.calls.length - 1];
-      expect(lastCall[0]).toEqual(
-        expect.objectContaining({
-          userLocation: expect.objectContaining({
-            lat: 35.6895,
-            lng: 139.6917,
-          }),
-        })
-      );
+      expect(screen.getByText('カフェA')).toBeInTheDocument();
     });
   });
 
-  it('should keep default location on geolocation error (permission denied)', async () => {
-    mockWatchPosition.mockImplementation(
-      (_successCallback: PositionCallback, errorCallback: PositionErrorCallback) => {
-        queueMicrotask(() => {
-          errorCallback({
-            code: 1, // PERMISSION_DENIED
-            message: 'User denied geolocation',
-            PERMISSION_DENIED: 1,
-            POSITION_UNAVAILABLE: 2,
-            TIMEOUT: 3,
-          } as GeolocationPositionError);
-        });
-        return 42;
-      }
-    );
+  it('should show no results message when API returns empty', async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchByMood).mockResolvedValue({
+      success: true,
+      data: [],
+      message: '近くにスポットが見つかりませんでした',
+    });
 
     render(<Home />);
+    await user.click(screen.getByText('まったり'));
 
-    // Should still have default coordinates - no update
     await waitFor(() => {
-      const lastCall = mockSearchBarProps.mock.calls[mockSearchBarProps.mock.calls.length - 1];
-      expect(lastCall[0]).toEqual(
-        expect.objectContaining({
-          userLocation: expect.objectContaining({
-            lat: DEFAULT_LAT,
-            lng: DEFAULT_LNG,
-          }),
-        })
-      );
+      expect(screen.getByText('近くにスポットが見つかりませんでした')).toBeInTheDocument();
     });
   });
 
-  it('should handle missing geolocation API silently (unsupported browser)', () => {
-    // Remove geolocation API
+  it('should show "気分を変える" button when mood is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchByMood).mockResolvedValue({
+      success: true,
+      data: [makeMockVibePlace('p1', 'カフェA')],
+    });
+
+    render(<Home />);
+    await user.click(screen.getByText('まったり'));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('ムードを変更')).toBeInTheDocument();
+    });
+  });
+
+  it('should return to mood selector when changing mood', async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchByMood).mockResolvedValue({
+      success: true,
+      data: [makeMockVibePlace('p1', 'カフェA')],
+    });
+
+    render(<Home />);
+    await user.click(screen.getByText('まったり'));
+
+    await waitFor(() => {
+      expect(screen.getByText('カフェA')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByLabelText('ムードを変更'));
+
+    expect(screen.getByText('今の気分は？')).toBeInTheDocument();
+  });
+
+  it('should handle missing geolocation API gracefully', () => {
     Object.defineProperty(navigator, 'geolocation', {
       value: undefined,
       writable: true,
       configurable: true,
     });
 
-    // Should not throw
     expect(() => render(<Home />)).not.toThrow();
-
-    // Should use default coordinates
-    expect(mockMapViewProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        initialCenter: { lat: DEFAULT_LAT, lng: DEFAULT_LNG },
-      })
-    );
+    expect(screen.getByText('今の気分は？')).toBeInTheDocument();
   });
 
-  it('should set isDefault=true for default/fallback location', () => {
+  it('should call watchPosition on mount', () => {
     render(<Home />);
-
-    // Initial state should have isDefault: true
-    expect(mockSearchBarProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userLocation: expect.objectContaining({
-          lat: DEFAULT_LAT,
-          lng: DEFAULT_LNG,
-        }),
-      })
-    );
-  });
-
-  it('should pass updated location to SearchBar after geolocation success', async () => {
-    mockWatchPosition.mockImplementation(
-      (successCallback: PositionCallback) => {
-        successCallback({
-          coords: {
-            latitude: 35.6895,
-            longitude: 139.6917,
-            accuracy: 10,
-            altitude: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          },
-          timestamp: Date.now(),
-        } as GeolocationPosition);
-        return 42;
-      }
-    );
-
-    render(<Home />);
-
-    await waitFor(() => {
-      const lastCall = mockSearchBarProps.mock.calls[mockSearchBarProps.mock.calls.length - 1];
-      expect(lastCall[0]).toEqual(
-        expect.objectContaining({
-          userLocation: expect.objectContaining({
-            lat: 35.6895,
-            lng: 139.6917,
-          }),
-        })
-      );
-    });
-  });
-
-  it('should call clearWatch on unmount', () => {
-    const { unmount } = render(<Home />);
-    unmount();
-
-    expect(mockClearWatch).toHaveBeenCalledWith(42);
-  });
-
-  it('should pass userLocation to MapView after GPS success', async () => {
-    mockWatchPosition.mockImplementation(
-      (successCallback: PositionCallback) => {
-        successCallback({
-          coords: {
-            latitude: 35.6895,
-            longitude: 139.6917,
-            accuracy: 10,
-            altitude: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          },
-          timestamp: Date.now(),
-        } as GeolocationPosition);
-        return 42;
-      }
-    );
-
-    render(<Home />);
-
-    await waitFor(() => {
-      const lastCall = mockMapViewProps.mock.calls[mockMapViewProps.mock.calls.length - 1];
-      expect(lastCall[0]).toEqual(
-        expect.objectContaining({
-          userLocation: { lat: 35.6895, lng: 139.6917 },
-        })
-      );
-    });
-  });
-
-  it('should call clearWatch on PERMISSION_DENIED error', async () => {
-    mockWatchPosition.mockImplementation(
-      (_successCallback: PositionCallback, errorCallback: PositionErrorCallback) => {
-        queueMicrotask(() => {
-          errorCallback({
-            code: 1,
-            message: 'User denied geolocation',
-            PERMISSION_DENIED: 1,
-            POSITION_UNAVAILABLE: 2,
-            TIMEOUT: 3,
-          } as GeolocationPositionError);
-        });
-        return 42;
-      }
-    );
-
-    render(<Home />);
-
-    await waitFor(() => {
-      expect(mockClearWatch).toHaveBeenCalledWith(42);
-    });
+    expect(navigator.geolocation.watchPosition).toHaveBeenCalledTimes(1);
   });
 });

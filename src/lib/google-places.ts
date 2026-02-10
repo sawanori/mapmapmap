@@ -1,3 +1,26 @@
+export interface GooglePlaceReview {
+  name: string;
+  relativePublishTimeDescription: string;
+  rating: number;
+  text?: { text: string; languageCode: string };
+  authorAttribution: {
+    displayName: string;
+    uri?: string;
+    photoUri?: string;
+  };
+}
+
+export interface GooglePlacePhoto {
+  name: string; // "places/{place_id}/photos/{photo_reference}"
+  widthPx: number;
+  heightPx: number;
+  authorAttributions: Array<{
+    displayName: string;
+    uri?: string;
+    photoUri?: string;
+  }>;
+}
+
 export interface GooglePlace {
   id: string;
   displayName: { text: string; languageCode: string };
@@ -11,6 +34,8 @@ export interface GooglePlace {
     periods?: unknown[];
     weekdayDescriptions: string[];
   };
+  reviews?: GooglePlaceReview[];
+  photos?: GooglePlacePhoto[];
 }
 
 const FIELD_MASK = [
@@ -22,6 +47,13 @@ const FIELD_MASK = [
   'places.rating',
   'places.formattedAddress',
   'places.regularOpeningHours',
+].join(',');
+
+/** reviews と photos を含む拡張フィールドマスク (追加課金あり) */
+const FIELD_MASK_EXTENDED = [
+  FIELD_MASK,
+  'places.reviews',
+  'places.photos',
 ].join(',');
 
 const MAX_RETRIES = 3;
@@ -95,4 +127,54 @@ export async function searchNearbyPlaces(
 
   const data = await response.json();
   return data.places ?? [];
+}
+
+/**
+ * Text Search (New) API でムードクエリベースの検索を実行。
+ * reviews, photos を含む拡張フィールドマスクを使用。
+ */
+export async function searchByText(
+  apiKey: string,
+  textQuery: string,
+  center: { lat: number; lng: number },
+  radiusMeters: number,
+  maxResults = 20,
+): Promise<GooglePlace[]> {
+  const response = await fetchWithRetry(
+    'https://places.googleapis.com/v1/places:searchText',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': FIELD_MASK_EXTENDED,
+      },
+      body: JSON.stringify({
+        textQuery,
+        maxResultCount: maxResults,
+        languageCode: 'ja',
+        locationBias: {
+          circle: {
+            center: { latitude: center.lat, longitude: center.lng },
+            radius: radiusMeters,
+          },
+        },
+      }),
+    },
+  );
+
+  const data = await response.json();
+  return data.places ?? [];
+}
+
+/**
+ * Google Places Photo の URL を構築する。
+ * https://places.googleapis.com/v1/{photo_name}/media?maxWidthPx=WIDTH&key=API_KEY
+ */
+export function getPhotoUrl(
+  photoName: string,
+  apiKey: string,
+  maxWidthPx = 800,
+): string {
+  return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=${maxWidthPx}&key=${apiKey}`;
 }
