@@ -13,11 +13,6 @@ vi.mock('@/app/geocoding-actions', () => ({
   geocodeStation: vi.fn(),
 }));
 
-// Mock route helper
-vi.mock('@/lib/route', () => ({
-  openRoute: vi.fn(),
-}));
-
 // Mock next/dynamic for LikedMap
 vi.mock('next/dynamic', () => ({
   default: () => {
@@ -31,12 +26,32 @@ vi.mock('next/dynamic', () => ({
   },
 }));
 
+// Mock SwipeIntro to simplify page-level tests
+vi.mock('@/components/SwipeIntro', () => ({
+  default: (props: Record<string, unknown>) => {
+    const onLike = props.onLike as (id: string) => void;
+    const onComplete = props.onComplete as () => void;
+    const places = props.places as Array<{ id: string; name: string }>;
+    return (
+      <div data-testid="swipe-intro">
+        {places.map((p) => (
+          <div key={p.id}>
+            <span>{p.name}</span>
+            <button onClick={() => onLike(p.id)}>Like {p.name}</button>
+          </div>
+        ))}
+        <button onClick={onComplete}>Complete Swipe</button>
+      </div>
+    );
+  },
+}));
+
 import Home from './page';
 import { useVibeStore } from '@/store/vibe-store';
 import { searchByMood } from '@/app/vibe-actions';
 import { makeMockVibePlace } from '@/test-utils/mock-data';
 
-describe('Home page - Vibe flow', () => {
+describe('Home page - Swipe flow', () => {
   let originalGeolocation: Geolocation;
 
   beforeEach(() => {
@@ -92,11 +107,15 @@ describe('Home page - Vibe flow', () => {
     expect(screen.getByText('駅名で探す')).toBeInTheDocument();
   });
 
-  it('should show results after geolocation grant', async () => {
+  it('should show SwipeIntro after geolocation grant', async () => {
     const user = userEvent.setup();
     vi.mocked(searchByMood).mockResolvedValue({
       success: true,
-      data: [makeMockVibePlace('p1', 'カフェA')],
+      data: [
+        makeMockVibePlace('p1', 'カフェA'),
+        makeMockVibePlace('p2', 'カフェB'),
+        makeMockVibePlace('p3', 'カフェC'),
+      ],
     });
 
     vi.mocked(navigator.geolocation.getCurrentPosition).mockImplementation(
@@ -112,11 +131,12 @@ describe('Home page - Vibe flow', () => {
     await user.click(screen.getByText('位置情報を許可して探す'));
 
     await waitFor(() => {
-      expect(screen.getByText('カフェA')).toBeInTheDocument();
+      expect(screen.getByTestId('swipe-intro')).toBeInTheDocument();
     });
+    expect(screen.getByText('カフェA')).toBeInTheDocument();
   });
 
-  it('should show no results message when API returns empty', async () => {
+  it('should show SwipeIntro empty state when no results', async () => {
     const user = userEvent.setup();
     vi.mocked(searchByMood).mockResolvedValue({
       success: true,
@@ -136,15 +156,18 @@ describe('Home page - Vibe flow', () => {
     await user.click(screen.getByText('位置情報を許可して探す'));
 
     await waitFor(() => {
-      expect(screen.getByText(/条件に合う候補が見つかりませんでした/)).toBeInTheDocument();
+      expect(screen.getByTestId('swipe-intro')).toBeInTheDocument();
     });
   });
 
-  it('should show "気分を変える" button when mood is selected', async () => {
+  it('should show LikedMap after swipe complete', async () => {
     const user = userEvent.setup();
     vi.mocked(searchByMood).mockResolvedValue({
       success: true,
-      data: [makeMockVibePlace('p1', 'カフェA')],
+      data: [
+        makeMockVibePlace('p1', 'カフェA'),
+        makeMockVibePlace('p2', 'カフェB'),
+      ],
     });
 
     vi.mocked(navigator.geolocation.getCurrentPosition).mockImplementation(
@@ -160,8 +183,19 @@ describe('Home page - Vibe flow', () => {
     await user.click(screen.getByText('位置情報を許可して探す'));
 
     await waitFor(() => {
-      expect(screen.getByText('気分を変える')).toBeInTheDocument();
+      expect(screen.getByTestId('swipe-intro')).toBeInTheDocument();
     });
+
+    await user.click(screen.getByText('Complete Swipe'));
+    expect(screen.getByTestId('liked-map')).toBeInTheDocument();
+  });
+
+  it('should show "気分を変える" button when mood is selected', async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    await user.click(screen.getByText('まったり'));
+    expect(screen.getByText('気分を変える')).toBeInTheDocument();
   });
 
   it('should return to mood selector when changing mood', async () => {
@@ -184,10 +218,40 @@ describe('Home page - Vibe flow', () => {
     await user.click(screen.getByText('位置情報を許可して探す'));
 
     await waitFor(() => {
-      expect(screen.getByText('カフェA')).toBeInTheDocument();
+      expect(screen.getByTestId('swipe-intro')).toBeInTheDocument();
     });
 
     await user.click(screen.getByText('気分を変える'));
+    expect(screen.getByText('今の気分は？')).toBeInTheDocument();
+  });
+
+  it('should return to mood from liked map back button', async () => {
+    const user = userEvent.setup();
+    vi.mocked(searchByMood).mockResolvedValue({
+      success: true,
+      data: [makeMockVibePlace('p1', 'カフェA')],
+    });
+
+    vi.mocked(navigator.geolocation.getCurrentPosition).mockImplementation(
+      (success) => {
+        success({
+          coords: { latitude: 35.68, longitude: 139.76 },
+        } as GeolocationPosition);
+      },
+    );
+
+    render(<Home />);
+    await user.click(screen.getByText('まったり'));
+    await user.click(screen.getByText('位置情報を許可して探す'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('swipe-intro')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Complete Swipe'));
+    expect(screen.getByTestId('liked-map')).toBeInTheDocument();
+
+    await user.click(screen.getByText('← 戻る'));
     expect(screen.getByText('今の気分は？')).toBeInTheDocument();
   });
 

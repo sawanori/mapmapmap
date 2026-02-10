@@ -7,7 +7,6 @@ import VibeBadge from './VibeBadge';
 interface PlaceDetailProps {
   place: VibePlace;
   isSaved: boolean;
-  onStartRoute: () => void;
   onToggleSaved: () => void;
   onBack: () => void;
 }
@@ -27,7 +26,6 @@ function formatPriceLevel(level: number | null): string | null {
 export default function PlaceDetail({
   place,
   isSaved,
-  onStartRoute,
   onToggleSaved,
   onBack,
 }: PlaceDetailProps) {
@@ -122,18 +120,11 @@ export default function PlaceDetail({
         </div>
       </div>
 
-      {/* Fixed bottom actions */}
-      <div className="flex gap-2 p-4 border-t border-gray-100 bg-white">
-        <button
-          onClick={onStartRoute}
-          className="flex-1 px-4 py-3 bg-blue-600 text-white font-medium rounded-xl
-                     hover:bg-blue-700 active:scale-[0.98] transition-all"
-        >
-          ルート開始
-        </button>
+      {/* Fixed bottom action */}
+      <div className="p-4 border-t border-gray-100 bg-white">
         <button
           onClick={onToggleSaved}
-          className={`px-5 py-3 font-medium rounded-xl border transition-all
+          className={`w-full px-4 py-3 font-medium rounded-xl border transition-all
             ${isSaved
               ? 'bg-red-50 text-red-600 border-red-200'
               : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'

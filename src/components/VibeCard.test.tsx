@@ -19,7 +19,6 @@ function makeMockVibePlace(overrides: Partial<VibePlace> = {}): VibePlace {
 
 const defaultProps = {
   isSaved: false,
-  onStartRoute: vi.fn(),
   onToggleSaved: vi.fn(),
 };
 
@@ -118,15 +117,6 @@ describe('VibeCard', () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
-  it('should call onStartRoute when ルート開始 clicked', async () => {
-    const user = userEvent.setup();
-    const onStartRoute = vi.fn();
-    render(<VibeCard place={makeMockVibePlace()} {...defaultProps} onStartRoute={onStartRoute} />);
-
-    await user.click(screen.getByText('ルート開始'));
-    expect(onStartRoute).toHaveBeenCalledTimes(1);
-  });
-
   it('should call onToggleSaved when 行きたい clicked', async () => {
     const user = userEvent.setup();
     const onToggleSaved = vi.fn();
@@ -139,5 +129,11 @@ describe('VibeCard', () => {
   it('should show filled heart when isSaved is true', () => {
     render(<VibeCard place={makeMockVibePlace()} {...defaultProps} isSaved={true} />);
     expect(screen.getByLabelText('行きたいを解除')).toBeInTheDocument();
+  });
+
+  it('should render 行きたい button full width', () => {
+    render(<VibeCard place={makeMockVibePlace()} {...defaultProps} />);
+    const btn = screen.getByLabelText('行きたい');
+    expect(btn.className).toContain('w-full');
   });
 });

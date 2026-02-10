@@ -22,7 +22,6 @@ interface ResultsScreenProps {
   errorMessage: string | null;
   onFilterChange: (partial: Partial<Filters>) => void;
   onPlaceSelect: (place: VibePlace) => void;
-  onStartRoute: (place: VibePlace) => void;
   onToggleSaved: (placeId: string) => void;
   onLoadMore: () => void;
   onChangeMood: () => void;
@@ -39,7 +38,6 @@ export default function ResultsScreen({
   errorMessage,
   onFilterChange,
   onPlaceSelect,
-  onStartRoute,
   onToggleSaved,
   onLoadMore,
   onChangeMood,
@@ -122,7 +120,6 @@ export default function ResultsScreen({
                 mood={mood}
                 isSaved={savedPlaceIds.includes(place.id)}
                 onSelect={() => onPlaceSelect(place)}
-                onStartRoute={() => onStartRoute(place)}
                 onToggleSaved={() => onToggleSaved(place.id)}
               />
             ))}

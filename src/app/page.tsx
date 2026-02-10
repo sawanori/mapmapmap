@@ -4,37 +4,29 @@ import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { DEFAULT_LAT, DEFAULT_LNG } from '@/lib/constants';
 import { useVibeStore } from '@/store/vibe-store';
-import { openRoute } from '@/lib/route';
 import MoodSelector from '@/components/MoodSelector';
 import LocationPrompt from '@/components/LocationPrompt';
 import StationSearch from '@/components/StationSearch';
-import ResultsScreen from '@/components/ResultsScreen';
-import PlaceDetail from '@/components/PlaceDetail';
-import type { Mood, VibePlace, GeoStatus } from '@/types/vibe';
+import SwipeIntro from '@/components/SwipeIntro';
+import type { Mood, GeoStatus } from '@/types/vibe';
 
 const LikedMap = dynamic(() => import('@/components/LikedMap'), { ssr: false });
 
-type ViewMode = 'mood' | 'permission_gate' | 'station_search' | 'results' | 'detail' | 'likedMap';
+type ViewMode = 'mood' | 'permission_gate' | 'station_search' | 'swipe' | 'likedMap';
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('mood');
   const [geoStatus, setGeoStatus] = useState<GeoStatus>('idle');
-  const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
 
   const {
     currentMood,
     coords,
-    filters,
     results,
-    displayCount,
     isLoading,
-    errorMessage,
     savedPlaceIds,
     setMood,
     setLocation,
-    updateFilter,
     loadResults,
-    loadMore,
     toggleSaved,
     reset,
   } = useVibeStore();
@@ -44,12 +36,9 @@ export default function Home() {
     (mood: Mood) => {
       setMood(mood);
       if (geoStatus === 'granted' || geoStatus === 'denied' || geoStatus === 'unavailable') {
-        // Already resolved → go to results directly
-        setViewMode('results');
-        // loadResults reads from store (coords already set)
+        setViewMode('swipe');
         loadResults();
       } else {
-        // idle → show permission gate
         setViewMode('permission_gate');
       }
     },
@@ -61,8 +50,7 @@ export default function Home() {
     (lat: number, lng: number, status: GeoStatus) => {
       setGeoStatus(status);
       setLocation('geo', lat, lng);
-      setViewMode('results');
-      // Need to set coords before loadResults reads them
+      setViewMode('swipe');
       useVibeStore.setState({
         locationMode: 'geo',
         coords: { lat, lng },
@@ -73,17 +61,16 @@ export default function Home() {
     [setLocation, loadResults],
   );
 
-  // Station search callback
+  // Station search
   const handleStationSearch = useCallback(() => {
     setViewMode('station_search');
   }, []);
 
-  // Station search submitted
   const handleStationSubmit = useCallback(
     (lat: number, lng: number, _stationName: string) => {
-      setGeoStatus('denied'); // Mark as resolved (non-geo)
+      setGeoStatus('denied');
       setLocation('station', lat, lng);
-      setViewMode('results');
+      setViewMode('swipe');
       useVibeStore.setState({
         locationMode: 'station',
         coords: { lat, lng },
@@ -94,51 +81,29 @@ export default function Home() {
     [setLocation, loadResults],
   );
 
-  // Back from station search to permission gate
   const handleBackFromStation = useCallback(() => {
     setViewMode('permission_gate');
   }, []);
 
-  // Filter change → reload results
-  const handleFilterChange = useCallback(
-    (partial: Partial<typeof filters>) => {
-      updateFilter(partial);
-      // loadResults will be called after filter update
-      // We need to trigger it after state update
-      setTimeout(() => {
-        useVibeStore.getState().loadResults();
-      }, 0);
+  // Swipe handlers
+  const handleSwipeLike = useCallback(
+    (placeId: string) => {
+      toggleSaved(placeId);
     },
-    [updateFilter],
+    [toggleSaved],
   );
 
-  // Place detail
-  const handlePlaceSelect = useCallback((place: VibePlace) => {
-    setSelectedPlace(place);
-    setViewMode('detail');
+  const handleSwipeComplete = useCallback(() => {
+    setViewMode('likedMap');
   }, []);
 
-  const handleBackFromDetail = useCallback(() => {
-    setSelectedPlace(null);
-    setViewMode('results');
-  }, []);
-
-  // Route start
-  const handleStartRoute = useCallback(
-    (place: VibePlace) => {
-      const c = coords ?? { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
-      openRoute(place, c.lat, c.lng);
-    },
-    [coords],
-  );
-
-  // Change mood
+  // Change mood → back to start
   const handleChangeMood = useCallback(() => {
     reset();
     setViewMode('mood');
   }, [reset]);
 
-  // Saved places
+  // Saved places for map
   const savedPlaces = results.filter((p) => savedPlaceIds.includes(p.id));
 
   // Show liked map
@@ -147,7 +112,7 @@ export default function Home() {
   }, []);
 
   const handleBackFromMap = useCallback(() => {
-    setViewMode('results');
+    setViewMode('mood');
   }, []);
 
   return (
@@ -163,19 +128,8 @@ export default function Home() {
         />
       )}
 
-      {/* Detail (fullscreen) */}
-      {viewMode === 'detail' && selectedPlace && (
-        <PlaceDetail
-          place={selectedPlace}
-          isSaved={savedPlaceIds.includes(selectedPlace.id)}
-          onStartRoute={() => handleStartRoute(selectedPlace)}
-          onToggleSaved={() => toggleSaved(selectedPlace.id)}
-          onBack={handleBackFromDetail}
-        />
-      )}
-
       {/* Main content area */}
-      {viewMode !== 'likedMap' && viewMode !== 'detail' && (
+      {viewMode !== 'likedMap' && (
         <div className="flex flex-col h-full">
           {/* Header */}
           <header className="flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
@@ -192,7 +146,7 @@ export default function Home() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {currentMood && viewMode === 'results' && savedPlaceIds.length > 0 && (
+              {currentMood && viewMode === 'swipe' && savedPlaceIds.length > 0 && (
                 <button
                   onClick={handleShowLikedMap}
                   className="px-3 py-1.5 text-xs font-medium text-blue-800 bg-blue-50 rounded-full"
@@ -201,7 +155,7 @@ export default function Home() {
                   ♥ {savedPlaceIds.length}
                 </button>
               )}
-              {currentMood && viewMode !== 'results' && (
+              {currentMood && (
                 <button
                   onClick={handleChangeMood}
                   className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white rounded-full border border-gray-200"
@@ -215,14 +169,12 @@ export default function Home() {
 
           {/* Content */}
           <div className="flex-1 overflow-hidden">
-            {/* Mood Selection */}
             {viewMode === 'mood' && (
               <div className="flex items-center justify-center h-full">
                 <MoodSelector onSelect={handleMoodSelect} />
               </div>
             )}
 
-            {/* Permission Gate */}
             {viewMode === 'permission_gate' && (
               <div className="flex items-center justify-center h-full">
                 <LocationPrompt
@@ -234,7 +186,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Station Search */}
             {viewMode === 'station_search' && (
               <div className="flex items-center justify-center h-full">
                 <StationSearch
@@ -244,24 +195,20 @@ export default function Home() {
               </div>
             )}
 
-            {/* Results */}
-            {viewMode === 'results' && currentMood && (
-              <ResultsScreen
-                results={results}
-                displayCount={displayCount}
-                mood={currentMood}
-                filters={filters}
+            {viewMode === 'swipe' && currentMood && !isLoading && (
+              <SwipeIntro
+                places={results.slice(0, 3)}
                 savedPlaceIds={savedPlaceIds}
-                isLoading={isLoading}
-                errorMessage={errorMessage}
-                onFilterChange={handleFilterChange}
-                onPlaceSelect={handlePlaceSelect}
-                onStartRoute={handleStartRoute}
-                onToggleSaved={toggleSaved}
-                onLoadMore={loadMore}
-                onChangeMood={handleChangeMood}
-                onStationSearch={handleStationSearch}
+                onLike={handleSwipeLike}
+                onComplete={handleSwipeComplete}
               />
+            )}
+
+            {viewMode === 'swipe' && isLoading && (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+                <p className="text-sm text-gray-500">スポットを探しています...</p>
+              </div>
             )}
           </div>
         </div>

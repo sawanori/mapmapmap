@@ -9,7 +9,6 @@ interface VibeCardProps {
   mood?: Mood;
   isSaved: boolean;
   onSelect?: () => void;
-  onStartRoute: () => void;
   onToggleSaved: () => void;
 }
 
@@ -25,7 +24,6 @@ export default function VibeCard({
   mood: _mood,
   isSaved,
   onSelect,
-  onStartRoute,
   onToggleSaved,
 }: VibeCardProps) {
   const walkMin = distanceToWalkMinutes(place.distance);
@@ -92,27 +90,18 @@ export default function VibeCard({
           ))}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={onStartRoute}
-            className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl
-                       hover:bg-blue-700 active:scale-[0.98] transition-all"
-          >
-            ルート開始
-          </button>
-          <button
-            onClick={onToggleSaved}
-            className={`px-4 py-2.5 text-sm font-medium rounded-xl border transition-all
-              ${isSaved
-                ? 'bg-red-50 text-red-600 border-red-200'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-              }`}
-            aria-label={isSaved ? '行きたいを解除' : '行きたい'}
-          >
-            {isSaved ? '♥' : '♡'} 行きたい
-          </button>
-        </div>
+        {/* Action button */}
+        <button
+          onClick={onToggleSaved}
+          className={`w-full px-4 py-2.5 text-sm font-medium rounded-xl border transition-all
+            ${isSaved
+              ? 'bg-red-50 text-red-600 border-red-200'
+              : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+            }`}
+          aria-label={isSaved ? '行きたいを解除' : '行きたい'}
+        >
+          {isSaved ? '♥' : '♡'} 行きたい
+        </button>
       </div>
     </div>
   );
