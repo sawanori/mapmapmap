@@ -53,8 +53,10 @@ export default function Home() {
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
           setGeoStatus('denied');
-          navigator.geolocation.clearWatch(watchId);
+        } else {
+          setGeoStatus('unavailable');
         }
+        navigator.geolocation.clearWatch(watchId);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
     );
@@ -135,11 +137,11 @@ export default function Home() {
               <h1 className="text-lg font-bold text-gray-900">
                 VIBE MAP
               </h1>
-              <p className="text-[10px] text-gray-400 -mt-0.5">
-                {geoStatus === 'loading' && '位置情報を取得中...'}
-                {geoStatus === 'granted' && `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`}
-                {geoStatus === 'denied' && 'デフォルト位置（みなとみらい）'}
-                {geoStatus === 'unavailable' && 'デフォルト位置（みなとみらい）'}
+              <p className="text-xs text-gray-500 -mt-0.5">
+                {geoStatus === 'loading' && '📍 位置情報を取得中...'}
+                {geoStatus === 'granted' && `📍 ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`}
+                {geoStatus === 'denied' && '📍 デフォルト位置（みなとみらい）'}
+                {geoStatus === 'unavailable' && '📍 デフォルト位置（みなとみらい）'}
               </p>
             </div>
             <div className="flex items-center gap-3">
