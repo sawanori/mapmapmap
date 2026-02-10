@@ -19,6 +19,7 @@ interface SwipeIntroProps {
   places: VibePlace[];
   savedPlaceIds: string[];
   onLike: (placeId: string) => void;
+  onToggleSaved: (placeId: string) => void;
   onComplete: () => void;
 }
 
@@ -26,6 +27,7 @@ export default function SwipeIntro({
   places,
   savedPlaceIds,
   onLike,
+  onToggleSaved,
   onComplete,
 }: SwipeIntroProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -191,7 +193,7 @@ export default function SwipeIntro({
             <VibeCard
               place={currentCard}
               isSaved={savedPlaceIds.includes(currentCard.id)}
-              onToggleSaved={() => onLike(currentCard.id)}
+              onToggleSaved={() => onToggleSaved(currentCard.id)}
             />
           </motion.div>
         </AnimatePresence>

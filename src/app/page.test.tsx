@@ -30,6 +30,7 @@ vi.mock('next/dynamic', () => ({
 vi.mock('@/components/SwipeIntro', () => ({
   default: (props: Record<string, unknown>) => {
     const onLike = props.onLike as (id: string) => void;
+    const onToggleSaved = props.onToggleSaved as (id: string) => void;
     const onComplete = props.onComplete as () => void;
     const places = props.places as Array<{ id: string; name: string }>;
     return (
@@ -38,6 +39,7 @@ vi.mock('@/components/SwipeIntro', () => ({
           <div key={p.id}>
             <span>{p.name}</span>
             <button onClick={() => onLike(p.id)}>Like {p.name}</button>
+            <button onClick={() => onToggleSaved(p.id)}>Toggle {p.name}</button>
           </div>
         ))}
         <button onClick={onComplete}>Complete Swipe</button>

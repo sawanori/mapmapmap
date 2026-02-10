@@ -85,12 +85,14 @@ export default function Home() {
     setViewMode('permission_gate');
   }, []);
 
-  // Swipe handlers
+  // Swipe handlers — like always saves (never removes)
   const handleSwipeLike = useCallback(
     (placeId: string) => {
-      toggleSaved(placeId);
+      if (!savedPlaceIds.includes(placeId)) {
+        toggleSaved(placeId);
+      }
     },
-    [toggleSaved],
+    [toggleSaved, savedPlaceIds],
   );
 
   const handleSwipeComplete = useCallback(() => {
@@ -200,6 +202,7 @@ export default function Home() {
                 places={results.slice(0, 3)}
                 savedPlaceIds={savedPlaceIds}
                 onLike={handleSwipeLike}
+                onToggleSaved={toggleSaved}
                 onComplete={handleSwipeComplete}
               />
             )}

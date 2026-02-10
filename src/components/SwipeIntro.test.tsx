@@ -47,6 +47,7 @@ describe('SwipeIntro', () => {
   const defaultProps = {
     savedPlaceIds: [] as string[],
     onLike: vi.fn(),
+    onToggleSaved: vi.fn(),
     onComplete: vi.fn(),
   };
 
