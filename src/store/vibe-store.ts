@@ -53,7 +53,7 @@ export const useVibeStore = create<VibeState>((set, get) => ({
   locationMode: null,
   coords: null,
   filters: {
-    radiusMeters: 900,
+    radiusMeters: 10000,
     openNow: false,
     maxPriceLevel: null,
     keyword: null,
@@ -136,7 +136,7 @@ export const useVibeStore = create<VibeState>((set, get) => ({
       locationMode: null,
       coords: null,
       filters: {
-        radiusMeters: 900,
+        radiusMeters: 10000,
         openNow: false,
         maxPriceLevel: null,
         keyword: null,

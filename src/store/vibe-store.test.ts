@@ -33,7 +33,7 @@ describe('vibe-store', () => {
     expect(state.results).toEqual([]);
     expect(state.displayCount).toBe(3);
     expect(state.filters).toEqual({
-      radiusMeters: 900,
+      radiusMeters: 10000,
       openNow: false,
       maxPriceLevel: null,
       keyword: null,
@@ -141,7 +141,7 @@ describe('vibe-store', () => {
   it('should apply radius filter client-side', async () => {
     const nearby = makeMockVibePlace('p1', 'Nearby');
     // distance defaults to 0.5 km from mock-data
-    const farAway = _makeMock('p2', 'FarAway', { distance: 5.0 });
+    const farAway = _makeMock('p2', 'FarAway', { distance: 15.0 });
 
     vi.mocked(searchByMood).mockResolvedValue({
       success: true,
@@ -154,7 +154,7 @@ describe('vibe-store', () => {
     act(() => {
       useVibeStore.getState().setLocation('geo', 35.65, 139.7);
     });
-    // default radiusMeters is 900 => 0.9 km; farAway (5.0 km) should be excluded
+    // default radiusMeters is 10000 => 10 km; farAway (15.0 km) should be excluded
 
     await act(async () => {
       await useVibeStore.getState().loadResults();
@@ -166,7 +166,7 @@ describe('vibe-store', () => {
   });
 
   it('should set error message when all results are filtered out by radius', async () => {
-    const farPlace = _makeMock('p1', 'Far', { distance: 5.0 });
+    const farPlace = _makeMock('p1', 'Far', { distance: 15.0 });
 
     vi.mocked(searchByMood).mockResolvedValue({
       success: true,
@@ -340,7 +340,7 @@ describe('vibe-store', () => {
     expect(state.locationMode).toBeNull();
     expect(state.coords).toBeNull();
     expect(state.filters).toEqual({
-      radiusMeters: 900,
+      radiusMeters: 10000,
       openNow: false,
       maxPriceLevel: null,
       keyword: null,
