@@ -83,14 +83,15 @@ export async function searchSpots(
         authToken: process.env.TURSO_AUTH_TOKEN!,
       });
 
+      const embeddingJson = JSON.stringify(embedding);
       const result = await client.execute({
         sql: `SELECT s.id, s.name, s.lat, s.lng, s.category, s.description, s.magazine_context,
                      s.google_place_id, s.rating, s.address, s.opening_hours, s.source,
-                     v.distance AS vector_distance
+                     vector_distance_cos(s.embedding, vector32(?)) AS vector_distance
               FROM vector_top_k('spots_idx', vector32(?), ?) AS v
               JOIN spots AS s ON s.rowid = v.id
-              WHERE v.distance < ?`,
-        args: [JSON.stringify(embedding), VECTOR_TOP_K, MAX_VECTOR_DISTANCE],
+              WHERE vector_distance < ?`,
+        args: [embeddingJson, embeddingJson, VECTOR_TOP_K, MAX_VECTOR_DISTANCE],
       });
       rows = result.rows as unknown as Array<Record<string, unknown>>;
     } catch (_e) {
