@@ -115,15 +115,43 @@ describe('LikedMap', () => {
     expect(screen.getByText('♥ 3')).toBeInTheDocument();
   });
 
-  it('should call onSelectPlace when a marker is clicked', async () => {
+  it('should show detail card when a marker is clicked', async () => {
     const user = userEvent.setup();
-    const onSelect = vi.fn();
     const places = [makeMockVibePlace('p1', 'カフェA')];
     render(
-      <LikedMap places={places} onBack={vi.fn()} onSelectPlace={onSelect} />,
+      <LikedMap places={places} onBack={vi.fn()} />,
     );
 
     await user.click(screen.getByTestId('marker'));
-    expect(onSelect).toHaveBeenCalledWith(places[0]);
+    expect(screen.getByRole('dialog', { name: 'カフェAの詳細' })).toBeInTheDocument();
+    expect(screen.getByText('素敵な場所')).toBeInTheDocument();
+    expect(screen.getByText('Google Maps で開く →')).toBeInTheDocument();
+  });
+
+  it('should close detail card when close button is clicked', async () => {
+    const user = userEvent.setup();
+    const places = [makeMockVibePlace('p1', 'カフェA')];
+    render(
+      <LikedMap places={places} onBack={vi.fn()} />,
+    );
+
+    await user.click(screen.getByTestId('marker'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('閉じる'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('should show rating and category in detail card', async () => {
+    const user = userEvent.setup();
+    const places = [makeMockVibePlace('p1', 'カフェA')];
+    render(
+      <LikedMap places={places} onBack={vi.fn()} />,
+    );
+
+    await user.click(screen.getByTestId('marker'));
+    expect(screen.getByText('Cafe')).toBeInTheDocument();
+    expect(screen.getByText('★ 4.0')).toBeInTheDocument();
+    expect(screen.getByText('1.0km')).toBeInTheDocument();
   });
 });

@@ -10,12 +10,17 @@ interface LikedMapProps {
   userLat?: number;
   userLng?: number;
   onBack: () => void;
-  onSelectPlace?: (place: VibePlace) => void;
 }
 
-export default function LikedMap({ places, userLat, userLng, onBack, onSelectPlace }: LikedMapProps) {
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)}m`;
+  return `${km.toFixed(1)}km`;
+}
+
+export default function LikedMap({ places, userLat, userLng, onBack }: LikedMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapError, setMapError] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -56,6 +61,20 @@ export default function LikedMap({ places, userLat, userLng, onBack, onSelectPla
     setMapError(true);
   }, []);
 
+  const handleMarkerClick = useCallback((place: VibePlace) => {
+    setSelectedPlace(place);
+    mapRef.current?.flyTo({
+      center: [place.lng, place.lat],
+      zoom: 16,
+      duration: 500,
+      offset: [0, -80],
+    });
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setSelectedPlace(null);
+  }, []);
+
   if (mapError) {
     return (
       <div className="relative w-full h-full flex items-center justify-center bg-gray-100">
@@ -81,6 +100,7 @@ export default function LikedMap({ places, userLat, userLng, onBack, onSelectPla
         }}
         onLoad={handleMapLoad}
         onError={handleMapError}
+        onClick={handleCloseDetail}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         mapStyle={MAP_STYLE}
         style={{ width: '100%', height: '100%' }}
@@ -104,13 +124,15 @@ export default function LikedMap({ places, userLat, userLng, onBack, onSelectPla
             anchor="bottom"
             onClick={(e) => {
               e.originalEvent.stopPropagation();
-              onSelectPlace?.(place);
+              handleMarkerClick(place);
             }}
           >
             <div className="flex flex-col items-center">
               <div
-                className="w-5 h-5 rounded-full border-2 border-white shadow-lg cursor-pointer
-                           transition-transform hover:scale-125"
+                className={`w-5 h-5 rounded-full border-2 border-white shadow-lg cursor-pointer
+                           transition-transform hover:scale-125 ${
+                             selectedPlace?.id === place.id ? 'scale-150 ring-2 ring-blue-400' : ''
+                           }`}
                 style={{ backgroundColor: PIN_COLOR }}
               />
               <span className="mt-1 px-2 py-0.5 text-[10px] font-medium bg-white rounded-full shadow text-gray-800 whitespace-nowrap max-w-[120px] truncate">
@@ -138,6 +160,116 @@ export default function LikedMap({ places, userLat, userLng, onBack, onSelectPla
           ♥ {places.length}
         </span>
       </div>
+
+      {/* Place detail card */}
+      {selectedPlace && (
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20 p-4 animate-in slide-in-from-bottom duration-300"
+          role="dialog"
+          aria-label={`${selectedPlace.name}の詳細`}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-md mx-auto">
+            {/* Hero image */}
+            {selectedPlace.heroImageUrl && (
+              <div className="relative h-40 w-full">
+                <img
+                  src={selectedPlace.heroImageUrl}
+                  alt={selectedPlace.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="p-4">
+              {/* Name + close */}
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                  {selectedPlace.name}
+                </h3>
+                <button
+                  onClick={handleCloseDetail}
+                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  aria-label="閉じる"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Catchphrase */}
+              <p className="text-sm text-gray-600 mt-1">
+                {selectedPlace.catchphrase}
+              </p>
+
+              {/* Meta row */}
+              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                <span className="px-2 py-0.5 bg-gray-100 rounded-full font-medium">
+                  {selectedPlace.category}
+                </span>
+                <span>{formatDistance(selectedPlace.distance)}</span>
+                {selectedPlace.rating != null && (
+                  <span className="text-yellow-500 font-medium">
+                    ★ {selectedPlace.rating.toFixed(1)}
+                  </span>
+                )}
+              </div>
+
+              {/* Vibe tags */}
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {selectedPlace.vibeTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-0.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Hidden gems */}
+              {selectedPlace.hiddenGemsInfo && (
+                <div className="mt-3 px-3 py-2 bg-amber-50 rounded-xl">
+                  <p className="text-xs text-amber-800">
+                    💎 {selectedPlace.hiddenGemsInfo}
+                  </p>
+                </div>
+              )}
+
+              {/* Address */}
+              {selectedPlace.address && (
+                <p className="mt-2 text-xs text-gray-400">
+                  📍 {selectedPlace.address}
+                </p>
+              )}
+
+              {/* Opening hours */}
+              {selectedPlace.openingHours && selectedPlace.openingHours.length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-xs text-gray-500 cursor-pointer">
+                    🕒 営業時間
+                  </summary>
+                  <ul className="mt-1 text-xs text-gray-400 space-y-0.5 pl-5">
+                    {selectedPlace.openingHours.map((h, i) => (
+                      <li key={i}>{h}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              {/* Google Maps link */}
+              <a
+                href={`https://www.google.com/maps/place/?q=place_id:${selectedPlace.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all"
+              >
+                Google Maps で開く →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
