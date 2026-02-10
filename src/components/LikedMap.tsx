@@ -7,18 +7,29 @@ import type { VibePlace } from '@/types/vibe';
 
 interface LikedMapProps {
   places: VibePlace[];
+  userLat?: number;
+  userLng?: number;
   onBack: () => void;
   onSelectPlace?: (place: VibePlace) => void;
 }
 
-export default function LikedMap({ places, onBack, onSelectPlace }: LikedMapProps) {
+export default function LikedMap({ places, userLat, userLng, onBack, onSelectPlace }: LikedMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
-    if (places.length === 0 || !mapRef.current) return;
+    if (!mapRef.current) return;
+    if (places.length === 0) return;
 
-    if (places.length === 1) {
+    // Include user location in bounds calculation
+    const allLngs = places.map((p) => p.lng);
+    const allLats = places.map((p) => p.lat);
+    if (userLat != null && userLng != null) {
+      allLngs.push(userLng);
+      allLats.push(userLat);
+    }
+
+    if (allLngs.length === 1 && !userLat) {
       mapRef.current.flyTo({
         center: [places[0].lng, places[0].lat],
         zoom: 16,
@@ -27,16 +38,14 @@ export default function LikedMap({ places, onBack, onSelectPlace }: LikedMapProp
       return;
     }
 
-    const lngs = places.map((p) => p.lng);
-    const lats = places.map((p) => p.lat);
     mapRef.current.fitBounds(
       [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)],
+        [Math.min(...allLngs), Math.min(...allLats)],
+        [Math.max(...allLngs), Math.max(...allLats)],
       ],
       { padding: 80, duration: 1000 },
     );
-  }, [places]);
+  }, [places, userLat, userLng]);
 
   const handleMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
@@ -57,7 +66,9 @@ export default function LikedMap({ places, onBack, onSelectPlace }: LikedMapProp
 
   const center = places.length > 0
     ? { lat: places[0].lat, lng: places[0].lng }
-    : { lat: 35.4544, lng: 139.6368 };
+    : userLat != null && userLng != null
+      ? { lat: userLat, lng: userLng }
+      : { lat: 35.4544, lng: 139.6368 };
 
   return (
     <div className="relative w-full h-full">
@@ -74,6 +85,17 @@ export default function LikedMap({ places, onBack, onSelectPlace }: LikedMapProp
         mapStyle={MAP_STYLE}
         style={{ width: '100%', height: '100%' }}
       >
+        {/* User location marker */}
+        {userLat != null && userLng != null && (
+          <Marker latitude={userLat} longitude={userLng} anchor="center">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-8 h-8 rounded-full bg-blue-400 opacity-30 animate-ping" />
+              <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" />
+            </div>
+          </Marker>
+        )}
+
+        {/* Place markers */}
         {places.map((place) => (
           <Marker
             key={place.id}

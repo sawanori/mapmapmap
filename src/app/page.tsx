@@ -124,6 +124,8 @@ export default function Home() {
       {viewMode === 'likedMap' && (
         <LikedMap
           places={likedPlaces}
+          userLat={userLat}
+          userLng={userLng}
           onBack={handleBackFromMap}
         />
       )}
