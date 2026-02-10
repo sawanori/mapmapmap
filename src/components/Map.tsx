@@ -70,7 +70,45 @@ export default function MapView({
   }, [searchResults]);
 
   const handleMapLoad = useCallback(() => {
-    mapRef.current?.getMap().setLanguage('ja');
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    map.setLanguage('ja');
+
+    // Apply blue tint to map layers
+    const style = map.getStyle();
+    if (!style?.layers) return;
+
+    for (const layer of style.layers) {
+      const id = layer.id;
+      const type = layer.type;
+
+      // Water → deeper blue
+      if (id.includes('water')) {
+        if (type === 'fill') map.setPaintProperty(id, 'fill-color', '#c7d9f0');
+        if (type === 'line') map.setPaintProperty(id, 'line-color', '#a3c4e8');
+      }
+      // Land / background → very faint blue-white
+      else if (id.includes('land') || id === 'background') {
+        if (type === 'fill') map.setPaintProperty(id, 'fill-color', '#f0f4fa');
+        if (type === 'background') map.setPaintProperty(id, 'background-color', '#f0f4fa');
+      }
+      // Buildings → light blue-gray
+      else if (id.includes('building')) {
+        if (type === 'fill') map.setPaintProperty(id, 'fill-color', '#dce4f0');
+      }
+      // Roads → blue-tinted gray
+      else if (id.includes('road') || id.includes('bridge')) {
+        if (type === 'line') {
+          try { map.setPaintProperty(id, 'line-color', '#cdd6e4'); } catch { /* some road layers use expressions */ }
+        }
+      }
+      // Parks / green areas → blue-tinted green
+      else if (id.includes('park') || id.includes('landuse') || id.includes('national')) {
+        if (type === 'fill') {
+          try { map.setPaintProperty(id, 'fill-color', '#d4e4ee'); } catch { /* skip expression layers */ }
+        }
+      }
+    }
   }, []);
 
   const handleMapError = useCallback(() => {
@@ -98,7 +136,7 @@ export default function MapView({
           type: 'fill-extrusion',
           minzoom: 14,
           paint: {
-            'fill-extrusion-color': '#c0c0c8',
+            'fill-extrusion-color': '#c4d0e4',
             'fill-extrusion-height': ['get', 'height'],
             'fill-extrusion-base': ['get', 'min_height'],
             'fill-extrusion-opacity': 0.7,
