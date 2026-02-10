@@ -1,0 +1,442 @@
+[
+  {
+    "name": "Fuglen Tokyo",
+    "lat": 35.6614,
+    "lng": 139.6938,
+    "category": "Cafe",
+    "description": "Norwegian coffee bar with vintage furniture. Daytime is a specialty coffee shop, evenings transform into a cocktail bar. Known for its Scandinavian minimalist design and carefully curated vinyl collection.",
+    "magazineContext": "BRUTUS 2024/01 Coffee Culture Special"
+  },
+  {
+    "name": "Sarutahiko Coffee Ebisu",
+    "lat": 35.6468,
+    "lng": 139.7102,
+    "category": "Cafe",
+    "description": "Single-origin specialty coffee roastery with a warm, inviting atmosphere. The baristas are passionate about extraction methods and happy to explain their process. Perfect for slow mornings.",
+    "magazineContext": "Hanako 2024/03 Tokyo Coffee Guide"
+  },
+  {
+    "name": "Bear Pond Espresso",
+    "lat": 35.6612,
+    "lng": 139.6679,
+    "category": "Cafe",
+    "description": "Tiny, legendary espresso bar in Shimokitazawa known for its angel stain latte art and intensely rich espresso. The owner is a perfectionist who limits the number of espressos served daily.",
+    "magazineContext": "BRUTUS 2023/11 Best Espresso in Tokyo"
+  },
+  {
+    "name": "Kayaba Coffee",
+    "lat": 35.7208,
+    "lng": 139.7707,
+    "category": "Cafe",
+    "description": "Historic kissaten in Yanaka, originally opened in 1938 and beautifully restored. The egg sandwich is legendary. Upstairs tatami seating offers a quiet retreat with views of the old neighborhood.",
+    "magazineContext": "Casa BRUTUS 2024/02 Timeless Tokyo"
+  },
+  {
+    "name": "Onibus Coffee Nakameguro",
+    "lat": 35.6440,
+    "lng": 139.6981,
+    "category": "Cafe",
+    "description": "Specialty coffee roastery along the Meguro River. The rooftop terrace offers seasonal views of cherry blossoms. Community-focused space that regularly hosts cupping events.",
+    "magazineContext": "POPEYE 2024/04 Neighborhood Coffee Shops"
+  },
+  {
+    "name": "B&B (Book and Beer)",
+    "lat": 35.6608,
+    "lng": 139.6670,
+    "category": "Bookstore",
+    "description": "Independent bookstore in Shimokitazawa that pairs curated book selections with craft beer. Hosts regular author events and readings. A cultural hub for the literary-minded.",
+    "magazineContext": "BRUTUS 2024/05 Reading Culture"
+  },
+  {
+    "name": "Tsutaya Books Daikanyama",
+    "lat": 35.6494,
+    "lng": 139.7003,
+    "category": "Bookstore",
+    "description": "Architectural masterpiece bookstore designed by Klein Dytham. Three interconnected buildings housing a curated collection of books, music, and films. The magazine floor is a destination in itself.",
+    "magazineContext": "Casa BRUTUS 2023/12 Beautiful Bookstores"
+  },
+  {
+    "name": "Title Bookshop",
+    "lat": 35.7032,
+    "lng": 139.5810,
+    "category": "Bookstore",
+    "description": "Small independent bookshop in Ogikubo run by a former magazine editor. Carefully curated selection focusing on art, design, and literature. The attached gallery space hosts intimate exhibitions.",
+    "magazineContext": "BRUTUS 2024/05 Reading Culture"
+  },
+  {
+    "name": "Bar Trench",
+    "lat": 35.6490,
+    "lng": 139.7091,
+    "category": "Bar",
+    "description": "Speakeasy-style cocktail bar in Ebisu inspired by World War I trench aesthetics. Award-winning bartender creates innovative cocktails using homemade ingredients. Intimate, candlelit atmosphere.",
+    "magazineContext": "BRUTUS 2024/03 Night Tokyo"
+  },
+  {
+    "name": "Bar Martha",
+    "lat": 35.6623,
+    "lng": 139.6660,
+    "category": "Bar",
+    "description": "Natural wine bar in Shimokitazawa with a rotating selection from small European producers. Relaxed standing-bar format encourages conversation. Simple but perfectly paired food menu.",
+    "magazineContext": "Hanako 2024/06 Natural Wine Guide"
+  },
+  {
+    "name": "Gen Yamamoto",
+    "lat": 35.6607,
+    "lng": 139.7282,
+    "category": "Bar",
+    "description": "Omakase cocktail bar in Azabu-Juban serving a fixed course of seasonal cocktails. Each drink is crafted with Japanese fruits and ingredients. A meditative, counter-only experience for eight guests.",
+    "magazineContext": "BRUTUS 2024/03 Night Tokyo"
+  },
+  {
+    "name": "Shinjuku Gyoen National Garden",
+    "lat": 35.6852,
+    "lng": 139.7100,
+    "category": "Park",
+    "description": "Vast garden blending three distinct styles: French formal, English landscape, and Japanese traditional. A serene escape in the heart of Shinjuku. Famous for cherry blossoms and autumn foliage.",
+    "magazineContext": "Hanako 2024/04 Green Tokyo"
+  },
+  {
+    "name": "Inokashira Park",
+    "lat": 35.6993,
+    "lng": 139.5739,
+    "category": "Park",
+    "description": "Beloved park surrounding a tranquil pond in Kichijoji. Rowboats, street performers, and the Ghibli Museum nearby. Weekend art market attracts local craftspeople and vintage dealers.",
+    "magazineContext": "POPEYE 2024/05 Weekend in Kichijoji"
+  },
+  {
+    "name": "Yoyogi Park",
+    "lat": 35.6717,
+    "lng": 139.6949,
+    "category": "Park",
+    "description": "Expansive green space next to Meiji Shrine. Popular for weekend picnics, joggers, and impromptu music performances. The wide open lawns offer a rare sense of space in central Tokyo.",
+    "magazineContext": "POPEYE 2024/02 Park Life"
+  },
+  {
+    "name": "Nezu Museum",
+    "lat": 35.6606,
+    "lng": 139.7190,
+    "category": "Gallery",
+    "description": "Private art museum designed by Kengo Kuma housing a collection of pre-modern Japanese and East Asian art. The bamboo-lined approach and Japanese garden are as memorable as the exhibitions.",
+    "magazineContext": "Casa BRUTUS 2024/01 Museum Architecture"
+  },
+  {
+    "name": "21_21 Design Sight",
+    "lat": 35.6604,
+    "lng": 139.7304,
+    "category": "Gallery",
+    "description": "Design museum founded by Issey Miyake in Tokyo Midtown. Tadao Ando-designed underground space hosting thought-provoking design exhibitions. Challenges visitors to see everyday objects differently.",
+    "magazineContext": "Casa BRUTUS 2024/01 Museum Architecture"
+  },
+  {
+    "name": "SCAI The Bathhouse",
+    "lat": 35.7217,
+    "lng": 139.7692,
+    "category": "Gallery",
+    "description": "Contemporary art gallery converted from a 200-year-old public bathhouse in Yanaka. Represents leading Japanese and international contemporary artists. The architectural contrast is stunning.",
+    "magazineContext": "BRUTUS 2024/07 Art Walk Yanaka"
+  },
+  {
+    "name": "Kagurazaka La Kagu",
+    "lat": 35.7014,
+    "lng": 139.7369,
+    "category": "Restaurant",
+    "description": "Renovated Shinchosha publishing warehouse turned lifestyle complex. Features a curated select shop, cafe, and event space. The wooden terrace is perfect for people-watching in Kagurazaka.",
+    "magazineContext": "Hanako 2024/02 Kagurazaka Walking Guide"
+  },
+  {
+    "name": "Afuri Ramen Ebisu",
+    "lat": 35.6476,
+    "lng": 139.7107,
+    "category": "Restaurant",
+    "description": "Yuzu-shio ramen shop drawing from spring water near Mt. Afuri. The clear, citrus-scented broth is a lighter alternative to heavy tonkotsu. Minimalist interior with counter seating.",
+    "magazineContext": "POPEYE 2024/01 Best Ramen"
+  },
+  {
+    "name": "Seirinkan",
+    "lat": 35.6616,
+    "lng": 139.6665,
+    "category": "Restaurant",
+    "description": "Legendary pizza restaurant in Shimokitazawa that pioneered the Tokyo pizza scene. Wood-fired Neapolitan-style pizza with Japanese seasonal toppings. Always a line, always worth the wait.",
+    "magazineContext": "BRUTUS 2023/09 Pizza in Tokyo"
+  },
+  {
+    "name": "Meiji Shrine",
+    "lat": 35.6764,
+    "lng": 139.6993,
+    "category": "Temple",
+    "description": "Shinto shrine in a dense forest in the heart of Shibuya. The towering torii gate and gravel path create an immediate sense of transition from urban chaos to sacred calm.",
+    "magazineContext": "Casa BRUTUS 2024/04 Sacred Spaces"
+  },
+  {
+    "name": "Nezu Shrine",
+    "lat": 35.7199,
+    "lng": 139.7612,
+    "category": "Temple",
+    "description": "One of Tokyo's oldest shrines, famous for its tunnel of vermillion torii gates and azalea garden. The hillside setting in Bunkyo offers a contemplative atmosphere away from tourist crowds.",
+    "magazineContext": "Casa BRUTUS 2024/04 Sacred Spaces"
+  },
+  {
+    "name": "Gotokuji Temple",
+    "lat": 35.6503,
+    "lng": 139.6390,
+    "category": "Temple",
+    "description": "The birthplace of the maneki-neko (beckoning cat). Hundreds of cat figurines fill the grounds creating a whimsical, photogenic scene. A quiet neighborhood temple with deep Edo-period history.",
+    "magazineContext": "Hanako 2024/05 Hidden Tokyo"
+  },
+  {
+    "name": "International Library of Children's Literature",
+    "lat": 35.7181,
+    "lng": 139.7743,
+    "category": "Library",
+    "description": "Tadao Ando-renovated Meiji-era brick building housing children's literature from around the world. The glass-and-steel addition creates a dialogue between old and new architecture.",
+    "magazineContext": "Casa BRUTUS 2024/03 Libraries We Love"
+  },
+  {
+    "name": "Musashino Place Library",
+    "lat": 35.7038,
+    "lng": 139.5583,
+    "category": "Library",
+    "description": "Modern public library in Musashisakai designed by kw+hg architects. Open, airy reading spaces with abundant natural light. Community hub with gallery space and workshop rooms.",
+    "magazineContext": "Casa BRUTUS 2024/03 Libraries We Love"
+  },
+  {
+    "name": "Blue Note Tokyo",
+    "lat": 35.6612,
+    "lng": 139.7140,
+    "category": "Music Venue",
+    "description": "Premier jazz club in Aoyama hosting world-class musicians. Intimate seating arrangement with excellent acoustics. Dinner-and-show format elevates the experience beyond just a concert.",
+    "magazineContext": "BRUTUS 2024/06 Jazz Night Out"
+  },
+  {
+    "name": "WWW / WWW X",
+    "lat": 35.6586,
+    "lng": 139.6987,
+    "category": "Music Venue",
+    "description": "Twin live music venues in Shibuya showcasing indie, electronic, and experimental music. The intimate WWW X upstairs hosts emerging artists. A cornerstone of Tokyo's underground music scene.",
+    "magazineContext": "POPEYE 2024/06 Music Guide Tokyo"
+  },
+  {
+    "name": "Yanaka Ginza Shopping Street",
+    "lat": 35.7246,
+    "lng": 139.7671,
+    "category": "Street",
+    "description": "Retro shopping street in the old-town Yanaka neighborhood. Family-run shops sell handmade crafts, traditional snacks, and daily goods. The sunset view from Yuyake Dandan steps is iconic.",
+    "magazineContext": "Hanako 2024/05 Hidden Tokyo"
+  },
+  {
+    "name": "Shimokitazawa Cage",
+    "lat": 35.6622,
+    "lng": 139.6688,
+    "category": "Cafe",
+    "description": "Third-wave coffee shop inside a renovated cage-like structure in Shimokitazawa. Minimalist concrete interior with excellent filter coffee. A favorite workspace for local creatives and freelancers.",
+    "magazineContext": "POPEYE 2024/04 Neighborhood Coffee Shops"
+  },
+  {
+    "name": "Koffee Mameya Kakeru",
+    "lat": 35.6613,
+    "lng": 139.7138,
+    "category": "Cafe",
+    "description": "Omakase-style coffee experience in Omotesando. The barista selects beans and brewing method based on your taste preferences. An intimate counter seats only eight, creating a meditative ritual.",
+    "magazineContext": "BRUTUS 2024/01 Coffee Culture Special"
+  },
+  {
+    "name": "Commune Shimokitazawa",
+    "lat": 35.6614,
+    "lng": 139.6672,
+    "category": "Restaurant",
+    "description": "Open-air food court in the redeveloped Shimokitazawa station area. Diverse stalls serving global street food from Thai to Mexican. Communal tables foster a casual, neighborhood gathering atmosphere.",
+    "magazineContext": "POPEYE 2024/03 Street Food Tokyo"
+  },
+  {
+    "name": "Mori Art Museum",
+    "lat": 35.6604,
+    "lng": 139.7292,
+    "category": "Gallery",
+    "description": "Contemporary art museum on the 53rd floor of Roppongi Hills. Ambitious exhibitions of global contemporary art with panoramic city views. The rooftop observation deck offers 360-degree Tokyo skyline.",
+    "magazineContext": "Casa BRUTUS 2024/06 Art Museum Rankings"
+  },
+  {
+    "name": "Monocle Shop Tokyo",
+    "lat": 35.6641,
+    "lng": 139.7124,
+    "category": "Shop",
+    "description": "Monocle magazine's flagship retail space in Tomigaya. Curated lifestyle goods from stationery to travel accessories. The adjacent cafe serves simple, well-made coffee and pastries.",
+    "magazineContext": "BRUTUS 2024/08 Design Shopping"
+  },
+  {
+    "name": "Kirokusha no Heya",
+    "lat": 35.7010,
+    "lng": 139.7374,
+    "category": "Bookstore",
+    "description": "Antiquarian bookshop in Kagurazaka specializing in photography and art books. The owner's curatorial eye creates an ever-changing selection that feels like visiting a private collection.",
+    "magazineContext": "BRUTUS 2024/05 Reading Culture"
+  },
+  {
+    "name": "Sidewalk Stand Nakameguro",
+    "lat": 35.6443,
+    "lng": 139.6970,
+    "category": "Cafe",
+    "description": "Tiny standing-only coffee and sandwich counter along the Meguro River. Simple menu executed perfectly. The standing format and river view make it a favorite morning ritual spot for locals.",
+    "magazineContext": "Hanako 2024/03 Tokyo Coffee Guide"
+  },
+  {
+    "name": "Yokohama Red Brick Warehouse",
+    "lat": 35.4532,
+    "lng": 139.6438,
+    "category": "Shop",
+    "description": "Historic brick warehouses from 1911 converted into a shopping and cultural complex on the Yokohama waterfront. Hall 1 hosts art exhibitions and concerts, Hall 2 features boutiques and restaurants. The seaside terrace offers stunning harbor views.",
+    "magazineContext": "Casa BRUTUS 2024/05 Waterfront Architecture"
+  },
+  {
+    "name": "Yokohama Museum of Art",
+    "lat": 35.4572,
+    "lng": 139.6322,
+    "category": "Gallery",
+    "description": "Grand symmetrical museum designed by Kenzo Tange in the heart of Minatomirai. Strong collection of modern and contemporary art including Picasso, Dali, and Isamu Noguchi. The soaring atrium is architecturally breathtaking.",
+    "magazineContext": "Casa BRUTUS 2024/06 Art Museum Rankings"
+  },
+  {
+    "name": "Marine & Walk Yokohama",
+    "lat": 35.4538,
+    "lng": 139.6414,
+    "category": "Shop",
+    "description": "Open-air waterfront shopping complex with a relaxed West Coast aesthetic. Curated mix of fashion, lifestyle shops, and seaside restaurants. The ocean breeze and harbor views create a resort-like atmosphere in the city.",
+    "magazineContext": "Hanako 2024/07 Yokohama Seaside Guide"
+  },
+  {
+    "name": "Hammam Head",
+    "lat": 35.4509,
+    "lng": 139.6455,
+    "category": "Restaurant",
+    "description": "Waterfront food hall and market at the tip of Shinko Pier. Fresh seafood, craft beer, and artisan foods with panoramic views of Yokohama Bay Bridge. A gathering spot for locals who love good food and ocean air.",
+    "magazineContext": "BRUTUS 2024/04 Best Food Markets"
+  },
+  {
+    "name": "Elephant Nose Park",
+    "lat": 35.4500,
+    "lng": 139.6472,
+    "category": "Park",
+    "description": "Uniquely shaped waterfront park on Yokohama's harbor with a distinctive elephant trunk-shaped pier. Open lawn and boardwalk perfect for evening strolls. The nighttime illumination of the surrounding port creates a romantic atmosphere.",
+    "magazineContext": "POPEYE 2024/08 Yokohama Night Walk"
+  },
+  {
+    "name": "Osanbashi Pier",
+    "lat": 35.4512,
+    "lng": 139.6490,
+    "category": "Park",
+    "description": "International cruise terminal with a stunning rooftop wooden deck known as the Whale's Back. Undulating grass-covered surface offers 360-degree views of Minatomirai skyline, Bay Bridge, and Mt. Fuji on clear days. A beloved spot for sunset watching.",
+    "magazineContext": "Casa BRUTUS 2024/05 Waterfront Architecture"
+  },
+  {
+    "name": "Bills Yokohama Red Brick Warehouse",
+    "lat": 35.4530,
+    "lng": 139.6432,
+    "category": "Cafe",
+    "description": "Australian restaurateur Bill Granger's Yokohama outpost inside the Red Brick Warehouse. Famous for ricotta hotcakes and scrambled eggs. The terrace seats overlooking the harbor make weekend brunch feel like a holiday.",
+    "magazineContext": "Hanako 2024/07 Yokohama Seaside Guide"
+  },
+  {
+    "name": "Chillulu Coffee & Hostel",
+    "lat": 35.4556,
+    "lng": 139.6310,
+    "category": "Cafe",
+    "description": "Specialty coffee shop and hostel hybrid in Minatomirai with a warm, community-focused atmosphere. Single-origin pour-overs and house-roasted beans. The open co-working space attracts digital nomads and creative travelers.",
+    "magazineContext": "POPEYE 2024/04 Neighborhood Coffee Shops"
+  },
+  {
+    "name": "Yokohama Chinatown Kanteibyou",
+    "lat": 35.4425,
+    "lng": 139.6463,
+    "category": "Temple",
+    "description": "Ornate Chinese temple dedicated to Guan Yu at the heart of Yokohama Chinatown, the largest Chinatown in Japan. Vibrant red and gold architecture with intricate dragon carvings. A spiritual anchor amid the bustling food streets.",
+    "magazineContext": "Casa BRUTUS 2024/04 Sacred Spaces"
+  },
+  {
+    "name": "Sankeien Garden",
+    "lat": 35.4305,
+    "lng": 139.6580,
+    "category": "Park",
+    "description": "Sprawling traditional Japanese garden built by silk merchant Hara Sankei in 1906. Historic buildings relocated from Kyoto and Kamakura dot the landscape around a central pond. Cherry blossoms, autumn leaves, and plum blossoms mark the seasons.",
+    "magazineContext": "Hanako 2024/04 Green Yokohama"
+  },
+  {
+    "name": "Yokohama Bayside Brewing",
+    "lat": 35.4535,
+    "lng": 139.6420,
+    "category": "Bar",
+    "description": "Craft brewery and taproom in the Red Brick Warehouse area serving house-brewed beers inspired by Yokohama's port city heritage. Rotating seasonal taps and harbor-view seating. A relaxed spot to unwind after a waterfront walk.",
+    "magazineContext": "BRUTUS 2024/09 Craft Beer Guide"
+  },
+  {
+    "name": "Cup Noodles Museum Yokohama",
+    "lat": 35.4559,
+    "lng": 139.6368,
+    "category": "Gallery",
+    "description": "Interactive museum celebrating instant noodle inventor Momofuku Ando. Design your own cup noodles and explore the history of this world-changing invention. The creative thinking exhibits inspire visitors of all ages.",
+    "magazineContext": "Casa BRUTUS 2024/08 Fun Museums"
+  },
+  {
+    "name": "Motomachi Shopping Street",
+    "lat": 35.4395,
+    "lng": 139.6510,
+    "category": "Street",
+    "description": "Elegant shopping street with a cosmopolitan history dating back to Yokohama's port opening in 1859. European-influenced boutiques, patisseries, and cafes line the tree-shaded avenue. A sophisticated alternative to typical shopping districts.",
+    "magazineContext": "Hanako 2024/07 Yokohama Seaside Guide"
+  },
+  {
+    "name": "Kishamichi Promenade",
+    "lat": 35.4545,
+    "lng": 139.6395,
+    "category": "Street",
+    "description": "Former railway line converted into a scenic pedestrian walkway connecting Sakuragicho to the Red Brick Warehouse. Old rail tracks preserved underfoot, flanked by harbor views and modern architecture. Perfect for a leisurely waterfront stroll.",
+    "magazineContext": "POPEYE 2024/08 Yokohama Night Walk"
+  },
+  {
+    "name": "Yokohama Noh Theater",
+    "lat": 35.4470,
+    "lng": 139.6365,
+    "category": "Music Venue",
+    "description": "Intimate Noh theater preserving Japan's oldest theatrical art form. Regular performances and workshops make this traditional art accessible to newcomers. The hushed cypress-wood stage creates a meditative, otherworldly experience.",
+    "magazineContext": "BRUTUS 2024/10 Traditional Performing Arts"
+  },
+  {
+    "name": "BUKATSUDO",
+    "lat": 35.4527,
+    "lng": 139.6352,
+    "category": "Cafe",
+    "description": "Community co-working and event space in Minatomirai's Dock Yard Garden. Hosts workshops from pottery to creative writing. The cafe serves quality coffee in a bright, inspiring environment designed for making and connecting.",
+    "magazineContext": "BRUTUS 2024/02 Creative Spaces"
+  },
+  {
+    "name": "Yamashita Park",
+    "lat": 35.4445,
+    "lng": 139.6530,
+    "category": "Park",
+    "description": "Yokohama's iconic seaside park stretching along the harbor with views of the Bay Bridge and ocean liners. Rose gardens, the historic Hikawa Maru ship, and wide promenades create a timeless waterfront atmosphere beloved by generations.",
+    "magazineContext": "POPEYE 2024/08 Yokohama Night Walk"
+  },
+  {
+    "name": "Number A",
+    "lat": 35.4548,
+    "lng": 139.6310,
+    "category": "Cafe",
+    "description": "Minimalist specialty coffee stand near Minatomirai station. Precise extraction methods and carefully sourced single-origin beans. The clean, architectural space and exceptional flat white make it a must-visit for coffee enthusiasts.",
+    "magazineContext": "BRUTUS 2024/01 Coffee Culture Special"
+  },
+  {
+    "name": "Yokohama Port Museum",
+    "lat": 35.4548,
+    "lng": 139.6380,
+    "category": "Gallery",
+    "description": "Museum chronicling Yokohama's transformation from a small fishing village to Japan's gateway to the world. The adjacent sailing ship Nippon Maru adds to the maritime atmosphere. Interactive exhibits bring the port's rich history to life.",
+    "magazineContext": "Casa BRUTUS 2024/05 Waterfront Architecture"
+  },
+  {
+    "name": "Cafe Elliott Avenue",
+    "lat": 35.4420,
+    "lng": 139.6500,
+    "category": "Cafe",
+    "description": "Charming cafe tucked in the backstreets of Motomachi with a Pacific Northwest-inspired interior. Excellent drip coffee and homemade baked goods. The quiet courtyard seating feels like a secret escape from the busy shopping street.",
+    "magazineContext": "Hanako 2024/03 Yokohama Coffee Guide"
+  }
+]
