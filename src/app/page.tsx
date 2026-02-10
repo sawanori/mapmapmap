@@ -137,7 +137,7 @@ export default function Home() {
           <header className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-gray-50/80 backdrop-blur-sm">
             <div>
               <h1 className="text-lg font-bold text-gray-900">
-                VIBE MAP
+                MAPMAPMAP!!!
               </h1>
               <p className="text-xs text-gray-500 -mt-0.5">
                 {geoStatus === 'loading' && '📍 位置情報を取得中...'}

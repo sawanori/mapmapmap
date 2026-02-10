@@ -20,7 +20,7 @@ export default function ShareButton({ place, mood }: ShareButtonProps) {
     const shareUrl = buildPlaceShareUrl(baseUrl, place, mood);
 
     const result = await shareOrCopy(
-      `${place.name} - VIBE MAP`,
+      `${place.name} - MAPMAPMAP!!!`,
       place.catchphrase,
       shareUrl,
     );

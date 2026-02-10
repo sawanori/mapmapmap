@@ -53,7 +53,7 @@ describe('ShareButton', () => {
     await user.click(screen.getByText('シェア'));
 
     expect(shareOrCopy).toHaveBeenCalledWith(
-      'カフェ モカ - VIBE MAP',
+      'カフェ モカ - MAPMAPMAP!!!',
       '夜に溶ける珈琲の香り',
       'https://vibe-map.app/share?mock=true',
     );

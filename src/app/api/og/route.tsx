@@ -5,7 +5,7 @@ export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const name = searchParams.get('name') ?? 'VIBE MAP';
+  const name = searchParams.get('name') ?? 'MAPMAPMAP!!!';
   const catchphrase = searchParams.get('catchphrase') ?? '';
   const mood = searchParams.get('mood') ?? 'chill';
   const tags = searchParams.get('tags') ?? '';
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
             gap: '16px',
           }}
         >
-          {/* VIBE MAP branding */}
+          {/* MAPMAPMAP!!! branding */}
           <div
             style={{
               display: 'flex',
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
               letterSpacing: '0.1em',
             }}
           >
-            VIBE MAP
+            MAPMAPMAP!!!
           </div>
 
           {/* Place name or summary title */}

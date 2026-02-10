@@ -19,7 +19,7 @@ export async function generateMetadata({
   searchParams,
 }: SharePageProps): Promise<Metadata> {
   const params = await searchParams;
-  const name = getParam(params, 'name') || 'VIBE MAP';
+  const name = getParam(params, 'name') || 'MAPMAPMAP!!!';
   const catchphrase = getParam(params, 'catchphrase');
   const mood = getParam(params, 'mood') || 'chill';
   const count = getParam(params, 'count');
@@ -28,9 +28,9 @@ export async function generateMetadata({
 
   const isSummary = parseInt(count) > 1;
   const title = isSummary
-    ? `${MOOD_LABELS[mood as Mood]?.ja ?? mood}のお気に入り ${count}件 | VIBE MAP`
-    : `${name} | VIBE MAP`;
-  const description = catchphrase || `${name}をVIBE MAPで発見しました`;
+    ? `${MOOD_LABELS[mood as Mood]?.ja ?? mood}のお気に入り ${count}件 | MAPMAPMAP!!!`
+    : `${name} | MAPMAPMAP!!!`;
+  const description = catchphrase || `${name}をMAPMAPMAP!!!で発見しました`;
 
   // Build OG image URL
   const ogParams = new URLSearchParams({ name, mood });

@@ -100,9 +100,9 @@ describe('Home page - Vibe flow', () => {
     expect(screen.getByText('集中')).toBeInTheDocument();
   });
 
-  it('should show VIBE MAP heading', () => {
+  it('should show MAPMAPMAP!!! heading', () => {
     render(<Home />);
-    expect(screen.getByText('VIBE MAP')).toBeInTheDocument();
+    expect(screen.getByText('MAPMAPMAP!!!')).toBeInTheDocument();
   });
 
   it('should show loading state after mood selection', async () => {
