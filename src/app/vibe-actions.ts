@@ -12,7 +12,7 @@ import type { VibePlace, Mood, SearchFilters } from '@/types/vibe';
 import { calculateScore } from '@/lib/scoring';
 import { createClient } from '@libsql/client';
 
-const MAX_GEMINI_PLACES = 10;
+const MAX_GEMINI_PLACES = 20;
 const RADIUS_EXPANSION_FACTOR = 1.5;
 
 function parsePriceLevel(raw?: string): number | null {

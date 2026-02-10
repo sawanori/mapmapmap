@@ -199,7 +199,7 @@ export default function Home() {
 
             {viewMode === 'swipe' && currentMood && !isLoading && (
               <SwipeIntro
-                places={results.slice(0, 5)}
+                places={results}
                 savedPlaceIds={savedPlaceIds}
                 onLike={handleSwipeLike}
                 onToggleSaved={toggleSaved}
