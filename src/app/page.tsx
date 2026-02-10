@@ -22,7 +22,7 @@ export default function Home() {
     lng: DEFAULT_LNG,
     isDefault: true,
   });
-  const [sortBy, setSortBy] = useState<SortBy>('distance');
+  const [sortBy, setSortBy] = useState<SortBy>('relevance');
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -84,7 +84,9 @@ export default function Home() {
   const sortedResults = useMemo(() => {
     if (searchResults.length === 0) return [];
     const sorted = [...searchResults];
-    if (sortBy === 'rating') {
+    if (sortBy === 'distance') {
+      sorted.sort((a, b) => a.distance - b.distance);
+    } else if (sortBy === 'rating') {
       sorted.sort((a, b) => {
         if (a.rating == null && b.rating == null) return 0;
         if (a.rating == null) return 1;
@@ -92,6 +94,7 @@ export default function Home() {
         return b.rating - a.rating;
       });
     }
+    // 'relevance' = server order (vectorDistance asc), no re-sort needed
     return sorted;
   }, [searchResults, sortBy]);
 

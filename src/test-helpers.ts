@@ -11,6 +11,7 @@ export function createMockSearchResult(overrides?: Partial<SearchResult>): Searc
     magazineContext: null,
     createdAt: null,
     distance: 0.5,
+    vectorDistance: 0.3,
     googlePlaceId: null,
     rating: null,
     address: null,

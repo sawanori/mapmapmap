@@ -212,6 +212,7 @@ describe('searchSpots', () => {
             address: null,
             opening_hours: null,
             source: 'manual',
+            vector_distance: 0.3,
           },
         ],
       });
@@ -243,6 +244,7 @@ describe('searchSpots', () => {
             address: null,
             opening_hours: null,
             source: 'manual',
+            vector_distance: 0.3,
           },
         ],
       });
@@ -257,17 +259,19 @@ describe('searchSpots', () => {
       }
     });
 
-    it('should sort results by distance ascending', async () => {
+    it('should sort results by vectorDistance ascending (relevance order)', async () => {
       mockEmbeddingsCreate.mockResolvedValue({
         data: [{ embedding: new Array(1536).fill(0) }],
       });
-      // Two points within 3km, different distances
+      // Two points within radius, different vector distances
+      // "Less Relevant" has higher vector_distance (less similar)
+      // "More Relevant" has lower vector_distance (more similar)
       mockClientExecute.mockResolvedValue({
         rows: [
           {
             id: 1,
-            name: 'Further Spot',
-            lat: 35.6900,
+            name: 'Less Relevant',
+            lat: 35.6820,
             lng: 139.7671,
             category: 'Bar',
             description: null,
@@ -277,10 +281,11 @@ describe('searchSpots', () => {
             address: null,
             opening_hours: null,
             source: 'manual',
+            vector_distance: 0.6,
           },
           {
             id: 2,
-            name: 'Closer Spot',
+            name: 'More Relevant',
             lat: 35.6820,
             lng: 139.7671,
             category: 'Cafe',
@@ -291,6 +296,7 @@ describe('searchSpots', () => {
             address: null,
             opening_hours: null,
             source: 'manual',
+            vector_distance: 0.2,
           },
         ],
       });
@@ -299,11 +305,11 @@ describe('searchSpots', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.length).toBeGreaterThanOrEqual(2);
-        expect(result.data[0].name).toBe('Closer Spot');
-        expect(result.data[1].name).toBe('Further Spot');
-        // Verify ascending order
+        expect(result.data[0].name).toBe('More Relevant');
+        expect(result.data[1].name).toBe('Less Relevant');
+        // Verify ascending vectorDistance order
         for (let i = 1; i < result.data.length; i++) {
-          expect(result.data[i].distance).toBeGreaterThanOrEqual(result.data[i - 1].distance);
+          expect(result.data[i].vectorDistance).toBeGreaterThanOrEqual(result.data[i - 1].vectorDistance);
         }
       }
     });
@@ -327,6 +333,7 @@ describe('searchSpots', () => {
             address: '1-1 Marunouchi, Chiyoda-ku',
             opening_hours: '["Monday: 9:00 AM - 5:00 PM"]',
             source: 'google_places',
+            vector_distance: 0.25,
           },
         ],
       });
@@ -349,6 +356,7 @@ describe('searchSpots', () => {
         expect(spot.address).toBe('1-1 Marunouchi, Chiyoda-ku');
         expect(spot.openingHours).toBe('["Monday: 9:00 AM - 5:00 PM"]');
         expect(spot.source).toBe('google_places');
+        expect(spot.vectorDistance).toBe(0.25);
       }
     });
 
@@ -371,6 +379,7 @@ describe('searchSpots', () => {
             address: null,
             opening_hours: null,
             source: 'manual',
+            vector_distance: 0.4,
           },
         ],
       });

@@ -95,7 +95,7 @@ describe('Home page sort toggle', () => {
     });
   });
 
-  it('defaults to 距離順', async () => {
+  it('defaults to 関連度順', async () => {
     render(<Home />);
 
     act(() => {
@@ -103,7 +103,7 @@ describe('Home page sort toggle', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('距離順')).toBeInTheDocument();
+      expect(screen.getByText('関連度順')).toBeInTheDocument();
     });
   });
 
@@ -115,38 +115,45 @@ describe('Home page sort toggle', () => {
     });
 
     await waitFor(() => {
+      expect(screen.getByText('関連度順')).toBeInTheDocument();
+    });
+
+    // Toggle: relevance -> distance
+    await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
+    await waitFor(() => {
       expect(screen.getByText('距離順')).toBeInTheDocument();
     });
 
-    // Toggle to rating sort
+    // Toggle: distance -> rating
     await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
-
     await waitFor(() => {
       expect(screen.getByText('評価順')).toBeInTheDocument();
     });
-
-    // MapView should still receive original searchResults (not sorted)
-    const lastMapCall = mockMapViewProps.mock.calls[mockMapViewProps.mock.calls.length - 1];
-    expect(lastMapCall[0].searchResults).toEqual(mixedResults);
   });
 
-  it('returns to server order when toggled back to 距離順', async () => {
+  it('returns to server order when toggled back to 関連度順', async () => {
     render(<Home />);
 
     act(() => {
       capturedOnResults!(mixedResults);
     });
 
-    // Toggle to rating
+    // Toggle: relevance -> distance
+    await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
+    await waitFor(() => {
+      expect(screen.getByText('距離順')).toBeInTheDocument();
+    });
+
+    // Toggle: distance -> rating
     await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
     await waitFor(() => {
       expect(screen.getByText('評価順')).toBeInTheDocument();
     });
 
-    // Toggle back to distance
+    // Toggle: rating -> relevance
     await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
     await waitFor(() => {
-      expect(screen.getByText('距離順')).toBeInTheDocument();
+      expect(screen.getByText('関連度順')).toBeInTheDocument();
     });
   });
 
@@ -157,9 +164,14 @@ describe('Home page sort toggle', () => {
       capturedOnResults!(allNullRating);
     });
 
-    // Toggle to rating -- should not throw
+    // Toggle: relevance -> distance
     await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
+    await waitFor(() => {
+      expect(screen.getByText('距離順')).toBeInTheDocument();
+    });
 
+    // Toggle: distance -> rating -- should not throw
+    await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
     await waitFor(() => {
       expect(screen.getByText('評価順')).toBeInTheDocument();
     });
@@ -184,7 +196,13 @@ describe('Home page sort toggle', () => {
       capturedOnResults!(mixedResults);
     });
 
-    // Toggle to rating
+    // Toggle: relevance -> distance
+    await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
+    await waitFor(() => {
+      expect(screen.getByText('距離順')).toBeInTheDocument();
+    });
+
+    // Toggle: distance -> rating
     await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
     await waitFor(() => {
       expect(screen.getByText('評価順')).toBeInTheDocument();
@@ -203,26 +221,27 @@ describe('Home page sort toggle', () => {
     });
   });
 
-  it('does not pass sortedResults to MapView (always original searchResults)', async () => {
+  it('passes sortedResults to MapView (sorted by current sortBy mode)', async () => {
     render(<Home />);
 
     act(() => {
       capturedOnResults!(mixedResults);
     });
 
-    // After results, MapView gets the original array
+    // In relevance mode (default), MapView gets server order (same as mixedResults)
     await waitFor(() => {
       const lastMapCall = mockMapViewProps.mock.calls[mockMapViewProps.mock.calls.length - 1];
       expect(lastMapCall[0].searchResults).toEqual(mixedResults);
     });
 
-    // Toggle to rating
+    // Toggle: relevance -> distance
     await userEvent.click(screen.getByRole('button', { name: /ソート切り替え/ }));
 
-    // MapView still gets original searchResults
+    // MapView now gets results sorted by distance ascending
+    const distanceSorted = [...mixedResults].sort((a, b) => a.distance - b.distance);
     await waitFor(() => {
       const lastMapCall = mockMapViewProps.mock.calls[mockMapViewProps.mock.calls.length - 1];
-      expect(lastMapCall[0].searchResults).toEqual(mixedResults);
+      expect(lastMapCall[0].searchResults).toEqual(distanceSorted);
     });
   });
 });

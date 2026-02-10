@@ -1,6 +1,7 @@
 // Search parameters
 export const VECTOR_TOP_K = 50;
 export const DEFAULT_RADIUS_KM = 10.0;
+export const MAX_VECTOR_DISTANCE = 0.85; // cosine distance threshold (0=identical, 2=opposite)
 export const MAX_QUERY_LENGTH = 200;
 export const MIN_QUERY_LENGTH = 1;
 

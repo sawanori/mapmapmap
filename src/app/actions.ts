@@ -11,6 +11,7 @@ import {
   MIN_QUERY_LENGTH,
   EMBEDDING_MODEL,
   EMBEDDING_TIMEOUT_MS,
+  MAX_VECTOR_DISTANCE,
 } from '@/lib/constants';
 
 interface SearchError {
@@ -84,10 +85,12 @@ export async function searchSpots(
 
       const result = await client.execute({
         sql: `SELECT s.id, s.name, s.lat, s.lng, s.category, s.description, s.magazine_context,
-                     s.google_place_id, s.rating, s.address, s.opening_hours, s.source
+                     s.google_place_id, s.rating, s.address, s.opening_hours, s.source,
+                     v.distance AS vector_distance
               FROM vector_top_k('spots_idx', vector32(?), ?) AS v
-              JOIN spots AS s ON s.rowid = v.id`,
-        args: [JSON.stringify(embedding), VECTOR_TOP_K],
+              JOIN spots AS s ON s.rowid = v.id
+              WHERE v.distance < ?`,
+        args: [JSON.stringify(embedding), VECTOR_TOP_K, MAX_VECTOR_DISTANCE],
       });
       rows = result.rows as unknown as Array<Record<string, unknown>>;
     } catch (_e) {
@@ -100,7 +103,7 @@ export async function searchSpots(
       };
     }
 
-    // 4. Haversine distance calculation + filter + sort
+    // 4. Haversine distance calculation + filter + sort by relevance then distance
     const results: SearchResult[] = rows
       .map((row) => {
         const distance = getDistanceFromLatLonInKm(
@@ -123,11 +126,12 @@ export async function searchSpots(
           rating: (row.rating as number) ?? null,
           address: (row.address as string) ?? null,
           openingHours: (row.opening_hours as string) ?? null,
-          source: (row.source as string) ?? 'manual',
-        } as SearchResult;
+          source: ((row.source as string) ?? 'manual') as SearchResult['source'],
+          vectorDistance: row.vector_distance as number,
+        };
       })
       .filter((spot) => spot.distance <= DEFAULT_RADIUS_KM)
-      .sort((a, b) => a.distance - b.distance);
+      .sort((a, b) => a.vectorDistance - b.vectorDistance);
 
     return { success: true, data: results };
   } catch (_e) {

@@ -16,9 +16,10 @@ export interface SpotRecord {
 
 export interface SearchResult extends SpotRecord {
   distance: number; // km
+  vectorDistance: number; // cosine distance (0=identical, 2=opposite)
 }
 
-export type SortBy = 'distance' | 'rating';
+export type SortBy = 'relevance' | 'distance' | 'rating';
 
 export interface UserLocation {
   lat: number;

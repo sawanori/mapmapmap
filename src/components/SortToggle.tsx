@@ -5,11 +5,20 @@ interface SortToggleProps {
   onSortChange: (sortBy: SortBy) => void;
 }
 
+const SORT_CYCLE: SortBy[] = ['relevance', 'distance', 'rating'];
+const SORT_LABELS: Record<SortBy, string> = {
+  relevance: '関連度順',
+  distance: '距離順',
+  rating: '評価順',
+};
+
 export default function SortToggle({ sortBy, onSortChange }: SortToggleProps) {
-  const label = sortBy === 'distance' ? '距離順' : '評価順';
+  const label = SORT_LABELS[sortBy];
 
   const handleClick = () => {
-    onSortChange(sortBy === 'distance' ? 'rating' : 'distance');
+    const currentIndex = SORT_CYCLE.indexOf(sortBy);
+    const nextIndex = (currentIndex + 1) % SORT_CYCLE.length;
+    onSortChange(SORT_CYCLE[nextIndex]);
   };
 
   return (
