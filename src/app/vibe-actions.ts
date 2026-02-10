@@ -163,18 +163,24 @@ export async function searchByMood(
   );
 
   // 2. Chain store pre-filter
+  const allPlaces = [...places];
   places = places.filter((p) => !isChainStore(p.displayName.text));
 
   // 3. If all filtered out, expand radius and retry once
   if (places.length === 0) {
-    places = await searchByText(
+    const expanded = await searchByText(
       placesApiKey,
       textQuery,
       { lat, lng },
       radiusMeters * RADIUS_EXPANSION_FACTOR,
       20,
     );
-    places = places.filter((p) => !isChainStore(p.displayName.text));
+    places = expanded.filter((p) => !isChainStore(p.displayName.text));
+  }
+
+  // 4. If still empty after chain filter, fall back to unfiltered results
+  if (places.length === 0) {
+    places = allPlaces;
   }
 
   if (places.length === 0) {
@@ -185,7 +191,7 @@ export async function searchByMood(
     };
   }
 
-  // 4. Limit to MAX_GEMINI_PLACES for cost control
+  // 5. Limit to MAX_GEMINI_PLACES for cost control
   const placesToConvert = places.slice(0, MAX_GEMINI_PLACES);
 
   // 5. Check cache

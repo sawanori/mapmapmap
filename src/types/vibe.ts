@@ -55,7 +55,7 @@ export interface SearchFilters {
 /** Mood → Google Places Text Search クエリ (日本語) */
 export const MOOD_QUERIES: Record<Mood, string> = {
   chill: '静かな カフェ 落ち着いた雰囲気',
-  party: 'にぎやか バー ナイトライフ 音楽',
+  party: 'にぎやか 居酒屋 バー レストラン 飲み会',
   focus: '作業 カフェ ワークスペース 静か',
 };
 
