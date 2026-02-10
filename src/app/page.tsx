@@ -28,8 +28,7 @@ export default function Home() {
   useEffect(() => {
     if (!navigator.geolocation) return;
 
-    let watchId: number;
-    watchId = navigator.geolocation.watchPosition(
+    const watchId = navigator.geolocation.watchPosition(
       (position) => {
         setUserLocation({
           lat: position.coords.latitude,
@@ -106,7 +105,7 @@ export default function Home() {
       <MapView
         initialCenter={{ lat: DEFAULT_LAT, lng: DEFAULT_LNG }}
         userLocation={mapUserLocation}
-        searchResults={searchResults}
+        searchResults={sortedResults}
         selectedSpot={selectedSpot}
         onSpotSelect={setSelectedSpot}
       />
@@ -115,7 +114,7 @@ export default function Home() {
         onResults={handleResults}
         onError={handleError}
       />
-      {searchResults.length > 0 && (
+      {sortedResults.length > 0 && (
         <SortToggle sortBy={sortBy} onSortChange={setSortBy} />
       )}
       <SpotCard
